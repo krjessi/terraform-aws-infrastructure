@@ -2652,3 +2652,352 @@ After completing this section, you should be able to confidently explain:
 These concepts are fundamental to building scalable, secure, and enterprise-ready Terraform projects and are frequently discussed in DevOps, Cloud, and Infrastructure as Code interviews.
 
 ---
+
+# Interview Questions – Step 2.8: `main.tf`
+
+## Overview
+
+These interview questions cover the concepts learned while creating the **`main.tf`** file.
+
+The answers are written in an interview-friendly format and focus on the Terraform Root Module, module orchestration, and enterprise best practices.
+
+---
+
+# 1. What is the Root Module in Terraform?
+
+## Answer
+
+The **Root Module** is the main Terraform configuration from which Terraform starts execution.
+
+It is the directory where Terraform commands such as:
+
+```bash id="2f4kma"
+terraform init
+terraform plan
+terraform apply
+```
+
+are executed.
+
+The Root Module is responsible for:
+
+* Configuring providers
+* Calling child modules
+* Passing variables
+* Managing outputs
+* Orchestrating the overall infrastructure
+
+It should **not** contain all the infrastructure resources.
+
+### Interview Tip
+
+> "The Root Module acts as the entry point and orchestrator of a Terraform project."
+
+---
+
+# 2. Does Terraform require a file named `main.tf`?
+
+## Answer
+
+**No.**
+
+Terraform automatically loads **all `.tf` files** in the working directory.
+
+For example:
+
+```text id="ov6ch2"
+abc.tf
+network.tf
+project.tf
+main.tf
+```
+
+All of these files are loaded together.
+
+The filename itself is not important.
+
+However, by convention, enterprise projects use:
+
+| File           | Purpose                   |
+| -------------- | ------------------------- |
+| `versions.tf`  | Version constraints       |
+| `provider.tf`  | Provider configuration    |
+| `variables.tf` | Input variables           |
+| `locals.tf`    | Local values              |
+| `data.tf`      | Data sources              |
+| `outputs.tf`   | Outputs                   |
+| `main.tf`      | Root module orchestration |
+
+### Interview Tip
+
+> "`main.tf` is a convention, not a Terraform requirement."
+
+---
+
+# 3. Why keep `main.tf` small?
+
+## Answer
+
+The Root Module should focus on orchestrating infrastructure, not implementing every resource.
+
+Keeping `main.tf` small provides several benefits:
+
+* Easier maintenance
+* Better readability
+* Simpler debugging
+* Clear separation of responsibilities
+* Improved collaboration
+
+Instead of defining hundreds of AWS resources directly, the Root Module should call reusable modules.
+
+### Beginner Approach
+
+```text id="vgqon7"
+main.tf
+
+├── VPC
+├── EC2
+├── ALB
+├── RDS
+└── IAM
+```
+
+### Enterprise Approach
+
+```text id="0kce0l"
+main.tf
+
+├── module.vpc
+├── module.ec2
+├── module.alb
+├── module.rds
+└── module.iam
+```
+
+### Interview Tip
+
+> "A small `main.tf` improves scalability by delegating implementation details to reusable modules."
+
+---
+
+# 4. Why use modules instead of one large file?
+
+## Answer
+
+Modules promote reuse, maintainability, and scalability.
+
+Without modules, the same infrastructure code must be copied between projects.
+
+With modules, common infrastructure can be reused.
+
+### Benefits
+
+* Code reuse
+* Smaller files
+* Easier testing
+* Better organization
+* Reduced duplication
+* Simpler maintenance
+
+### Example
+
+Instead of writing a VPC multiple times:
+
+```text id="u7mhho"
+LinkedIn
+
+Airbnb
+
+Netflix
+```
+
+use a single reusable module:
+
+```text id="snj0fk"
+modules/
+
+└── vpc/
+```
+
+### Interview Tip
+
+> "Modules follow the DRY (Don't Repeat Yourself) principle and are the foundation of enterprise Terraform projects."
+
+---
+
+# 5. What belongs in `main.tf`?
+
+## Answer
+
+The Root Module should contain orchestration logic.
+
+Typical responsibilities include:
+
+* Calling child modules
+* Passing variables
+* Passing local values
+* Configuring module relationships
+* Managing outputs
+
+Example:
+
+```hcl id="2m8jnv"
+module "vpc" {
+
+  source = "./modules/vpc"
+
+  project_name = var.project_name
+
+  environment = var.environment
+
+  common_tags = local.common_tags
+
+}
+```
+
+The actual AWS resources should remain inside the child module.
+
+### Interview Tip
+
+> "`main.tf` should coordinate infrastructure, not implement every resource."
+
+---
+
+# 6. How do modules communicate?
+
+## Answer
+
+Modules communicate through **Inputs** and **Outputs**.
+
+### Parent → Child
+
+The parent module passes variables into the child module.
+
+Example:
+
+```hcl id="hsgs2k"
+module "vpc" {
+
+  source = "./modules/vpc"
+
+  project_name = var.project_name
+
+}
+```
+
+### Child → Parent
+
+The child module exposes values using outputs.
+
+Example:
+
+```hcl id="zuw0hr"
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
+```
+
+The parent module accesses the value using:
+
+```hcl id="n8ddob"
+module.vpc.vpc_id
+```
+
+This creates a clean and reusable interface between modules.
+
+---
+
+# 7. How does the Root Module pass variables to Child Modules?
+
+## Answer
+
+The Root Module passes variables by assigning values within the module block.
+
+Example:
+
+### Root Module
+
+```hcl id="0stlfk"
+module "vpc" {
+
+  source = "./modules/vpc"
+
+  project_name = var.project_name
+
+  environment = var.environment
+
+  common_tags = local.common_tags
+
+}
+```
+
+### Child Module (`variables.tf`)
+
+```hcl id="qqodsu"
+variable "project_name" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "common_tags" {
+  type = map(string)
+}
+```
+
+Terraform automatically maps the values supplied by the Root Module to the corresponding input variables in the Child Module.
+
+### Benefits
+
+* Clear interfaces
+* Loose coupling
+* Better reusability
+* Easier testing
+
+### Interview Tip
+
+> "The Root Module passes inputs to Child Modules using module arguments, and Child Modules return values using outputs."
+
+---
+
+# Quick Revision
+
+| Question                                 | Key Point                                                |
+| ---------------------------------------- | -------------------------------------------------------- |
+| What is the Root Module?                 | The entry point that orchestrates the Terraform project. |
+| Does Terraform require `main.tf`?        | No. Terraform loads all `.tf` files automatically.       |
+| Why keep `main.tf` small?                | To improve readability, maintainability, and modularity. |
+| Why use modules?                         | To promote code reuse, organization, and scalability.    |
+| What belongs in `main.tf`?               | Module orchestration, variable passing, and outputs.     |
+| How do modules communicate?              | Through input variables and output values.               |
+| How does the Root Module pass variables? | By providing values inside the `module` block.           |
+
+---
+
+# Interview Tips
+
+* Clearly distinguish the **Root Module** from **Child Modules**.
+* Explain that `main.tf` is a naming convention, not a requirement.
+* Emphasize that enterprise projects keep `main.tf` focused on orchestration.
+* Mention that modules communicate using **inputs** and **outputs**.
+* Use practical examples such as a reusable VPC module to demonstrate modular design.
+
+---
+
+# Summary
+
+After completing this section, you should be able to confidently explain:
+
+* What the Root Module is.
+* Why Terraform does not require a file named `main.tf`.
+* Why enterprise projects keep `main.tf` small.
+* The benefits of modular Terraform design.
+* What belongs in the Root Module.
+* How modules communicate using inputs and outputs.
+* How the Root Module passes variables to Child Modules.
+
+These concepts are fundamental to enterprise Terraform development and are frequently discussed in DevOps, Cloud, and Infrastructure as Code interviews.
+
+---

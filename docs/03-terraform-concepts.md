@@ -3145,3 +3145,458 @@ In the next phase, you'll begin creating actual AWS infrastructure using reusabl
 The strong foundation built in Phase 2 will now support scalable, modular, and production-ready infrastructure provisioning.
 
 ---
+
+# 🚀 Phase 2 – Step 2.8: Create `main.tf`
+
+**Duration:** 20–30 Minutes
+
+---
+
+# 🎯 Goal
+
+Create the **Root Module orchestration layer** for the Terraform project.
+
+### Enterprise Rule
+
+`main.tf` should **not** contain all your AWS resources.
+
+Instead, it should orchestrate reusable Terraform modules.
+
+This is one of the biggest differences between a **beginner Terraform project** and a **production-ready enterprise project**.
+
+---
+
+# 📖 Theory
+
+## What is `main.tf`?
+
+`main.tf` is the **entry point** of a Terraform project.
+
+Although Terraform doesn't require a file named `main.tf`, it is the industry-standard convention used in almost every Terraform project.
+
+Terraform automatically loads **all `.tf` files** in the current directory.
+
+The filename itself is not important—the contents are.
+
+---
+
+# Enterprise Terraform File Structure
+
+By convention, Terraform projects organize files like this:
+
+| File | Responsibility |
+|------|----------------|
+| `versions.tf` | Terraform and Provider version constraints |
+| `provider.tf` | Provider configuration |
+| `variables.tf` | Input variables |
+| `terraform.tfvars` | Variable values |
+| `locals.tf` | Local values |
+| `data.tf` | Data sources |
+| `outputs.tf` | Outputs |
+| `main.tf` | Root module orchestration |
+
+Keeping responsibilities separated improves readability and maintainability.
+
+---
+
+# Beginner vs Enterprise
+
+## ❌ Beginner Project
+
+Everything is written inside one file.
+
+```text
+main.tf
+
+├── VPC
+├── Internet Gateway
+├── Route Tables
+├── EC2
+├── Security Groups
+├── ALB
+├── Auto Scaling
+├── RDS
+├── IAM
+└── CloudWatch
+```
+
+Problems:
+
+- Huge file
+- Difficult to maintain
+- Hard to debug
+- Poor reusability
+- Difficult collaboration
+
+---
+
+## ✅ Enterprise Project
+
+The root module only connects reusable modules.
+
+```text
+main.tf
+
+│
+├── module.vpc
+├── module.security_group
+├── module.iam
+├── module.alb
+├── module.ec2
+├── module.autoscaling
+├── module.rds
+└── module.monitoring
+```
+
+Each module has:
+
+- Its own folder
+- Its own variables
+- Its own outputs
+- A single responsibility
+
+This follows Terraform best practices.
+
+---
+
+# Why Use Modules?
+
+Imagine building infrastructure for:
+
+- LinkedIn
+- Airbnb
+- Netflix
+
+Without modules:
+
+You rewrite the VPC configuration three times.
+
+With modules:
+
+```text
+modules/
+└── vpc/
+```
+
+The same module can be reused in every project.
+
+---
+
+## Benefits of Modules
+
+- Reusable
+- Easier testing
+- Better maintenance
+- Cleaner code
+- Smaller files
+- Easier collaboration
+- Consistent architecture
+
+Modules are the foundation of enterprise Terraform development.
+
+---
+
+# What Should `main.tf` Contain Today?
+
+At this stage of the project:
+
+- No VPC module exists.
+- No EC2 module exists.
+- No RDS module exists.
+
+Therefore, **do not** add placeholder module blocks.
+
+Instead, create a documented entry point that explains the future purpose of the file.
+
+---
+
+# Create `main.tf`
+
+Navigate to:
+
+```text
+terraform/
+```
+
+Open:
+
+```text
+main.tf
+```
+
+Replace the contents with the following:
+
+```hcl
+#############################################
+# Root Module
+#############################################
+
+# This file serves as the entry point for the Terraform configuration.
+#
+# As the project evolves, it will orchestrate reusable modules such as:
+#
+# - VPC
+# - Security Groups
+# - IAM
+# - Application Load Balancer
+# - EC2
+# - Auto Scaling Group
+# - RDS
+# - CloudWatch Monitoring
+#
+# All infrastructure resources will be created inside dedicated modules
+# located under the modules/ directory.
+```
+
+That's all.
+
+No resources.
+
+No modules.
+
+Only documentation.
+
+---
+
+# Why Not Add Empty Modules?
+
+Some tutorials suggest creating empty module blocks like this:
+
+```hcl
+module "vpc" {
+
+}
+```
+
+This is **not valid**.
+
+Terraform expects every module to have at least:
+
+- A `source`
+- A valid module directory
+- Configuration
+
+Without these, Terraform produces validation errors.
+
+---
+
+# Example of an Invalid Module
+
+```hcl
+module "vpc" {
+
+}
+```
+
+Terraform cannot determine:
+
+- Where the module is located.
+- What resources it contains.
+- What variables it requires.
+
+---
+
+# When Should Module Blocks Be Added?
+
+Only after the module actually exists.
+
+For example:
+
+```text
+modules/
+
+└── vpc/
+```
+
+Once the module is created, the root module can reference it.
+
+---
+
+# How `main.tf` Will Look in Phase 3
+
+After creating the VPC module, `main.tf` will evolve into something like this:
+
+```hcl
+module "vpc" {
+
+  source = "./modules/vpc"
+
+  project_name = var.project_name
+
+  environment = var.environment
+
+  common_tags = local.common_tags
+
+}
+```
+
+Notice that the root module:
+
+- Passes variables
+- Passes locals
+- Calls reusable modules
+
+It does **not** define the actual AWS resources.
+
+---
+
+# Root Module Responsibilities
+
+The root module should:
+
+- Connect modules together.
+- Pass variables to modules.
+- Pass local values.
+- Configure providers.
+- Expose outputs.
+
+It should **not** contain hundreds of AWS resources.
+
+---
+
+# Validation
+
+Navigate to the Terraform directory.
+
+```bash
+cd terraform
+```
+
+---
+
+## Format the Configuration
+
+Run:
+
+```bash
+terraform fmt
+```
+
+---
+
+## Validate the Configuration
+
+Run:
+
+```bash
+terraform validate
+```
+
+Expected output:
+
+```text
+Success! The configuration is valid.
+```
+
+---
+
+## Generate the Execution Plan
+
+Run:
+
+```bash
+terraform plan
+```
+
+Expected behavior:
+
+Terraform should still display only the existing Outputs because no infrastructure resources have been defined yet.
+
+---
+
+# Project Structure
+
+After this step, your project should look like:
+
+```text
+terraform/
+│
+├── versions.tf
+├── provider.tf
+├── variables.tf
+├── terraform.tfvars
+├── locals.tf
+├── data.tf
+├── outputs.tf
+├── main.tf
+├── modules/
+└── environments/
+```
+
+---
+
+# Documentation
+
+Update:
+
+```text
+docs/terraform-concepts.md
+```
+
+Add a new section.
+
+## Root Module
+
+Include the following topics:
+
+- What is the Root Module?
+- Why keep `main.tf` small?
+- Why use Terraform Modules?
+- How modules improve reusability
+- Root Module vs Child Modules
+- Enterprise Terraform project structure
+
+---
+
+# Best Practices
+
+- Keep `main.tf` focused on orchestration.
+- Never place all AWS resources in the root module.
+- Create reusable modules with a single responsibility.
+- Pass variables and locals into modules instead of hardcoding values.
+- Add module blocks only after the module exists.
+- Validate the configuration after every change.
+
+---
+
+# Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Empty module block | Module has no `source` or configuration | Add module blocks only after creating the module. |
+| Large `main.tf` file | All infrastructure defined in the root module | Move resources into reusable modules. |
+| Duplicate infrastructure code | Resources copied between projects | Create reusable modules inside the `modules/` directory. |
+
+---
+
+# Summary
+
+In this step, you:
+
+- Created the `main.tf` file.
+- Learned the purpose of the Root Module.
+- Understood why enterprise Terraform projects keep `main.tf` small.
+- Learned why reusable modules are essential.
+- Prepared the project for modular infrastructure development.
+- Successfully validated the Terraform configuration.
+
+The Root Module acts as the **orchestrator** of the entire Terraform project. As the project grows, `main.tf` will connect reusable modules rather than defining infrastructure directly, resulting in a cleaner, more scalable, and production-ready Infrastructure as Code architecture.
+
+---
+
+# Next Step
+
+Phase 2 is now complete.
+
+In **Phase 3**, you'll begin creating reusable Terraform modules, starting with the **VPC module**, where you'll provision foundational networking components such as:
+
+- Amazon VPC
+- Public Subnets
+- Private Subnets
+- Internet Gateway
+- NAT Gateway
+- Route Tables
+
+From this point onward, the project transitions from building the Terraform foundation to provisioning real AWS infrastructure using enterprise-grade modular design.
+
+---

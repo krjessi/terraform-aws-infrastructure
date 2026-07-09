@@ -1442,3 +1442,216 @@ After completing this step, the following lessons were learned:
 These lessons provide a strong foundation for managing Terraform configuration across multiple environments using industry-standard best practices.
 
 ---
+
+# Lessons Learned
+
+## Phase 2 – Step 2.8: `main.tf`
+
+This document captures the key concepts and best practices learned while creating the `main.tf` file and understanding the role of the Terraform Root Module.
+
+---
+
+## Key Takeaways
+
+### 1. The Root Module Orchestrates Child Modules
+
+The **Root Module** is the entry point of a Terraform project.
+
+Its primary responsibility is to orchestrate reusable **Child Modules** by:
+
+* Calling modules
+* Passing input variables
+* Passing local values
+* Connecting module outputs
+* Coordinating the overall infrastructure
+
+The Root Module should focus on orchestration rather than implementing infrastructure resources directly.
+
+---
+
+### 2. `main.tf` Should Remain Simple
+
+A common mistake in beginner Terraform projects is placing every AWS resource in a single `main.tf` file.
+
+Enterprise projects avoid this by keeping `main.tf` small and focused.
+
+Typical responsibilities of `main.tf` include:
+
+* Calling modules
+* Passing variables
+* Passing local values
+* Managing dependencies
+* Connecting outputs
+
+This improves readability, maintainability, and scalability.
+
+---
+
+### 3. Modules Improve Code Reuse and Maintenance
+
+Terraform Modules allow infrastructure components to be written once and reused across multiple projects.
+
+Examples of reusable modules include:
+
+* VPC
+* Security Groups
+* IAM
+* EC2
+* Application Load Balancer
+* Auto Scaling Group
+* Amazon RDS
+
+Benefits of using modules:
+
+* Code reuse
+* Smaller files
+* Easier testing
+* Better organization
+* Simplified maintenance
+* Consistent architecture
+
+Modules are a fundamental part of enterprise Infrastructure as Code.
+
+---
+
+### 4. Terraform Automatically Loads All `.tf` Files
+
+Terraform does not require a file to be named `main.tf`.
+
+Instead, it automatically loads **all `.tf` files** in the working directory.
+
+For example:
+
+```text id="2r6nwh"
+versions.tf
+provider.tf
+variables.tf
+locals.tf
+data.tf
+outputs.tf
+main.tf
+```
+
+Terraform combines these files into a single configuration during execution.
+
+Using descriptive filenames is a convention that improves project organization.
+
+---
+
+### 5. Separate Responsibilities Across Files
+
+Organizing Terraform code by responsibility makes projects easier to understand and maintain.
+
+Typical file organization:
+
+| File               | Responsibility         |
+| ------------------ | ---------------------- |
+| `versions.tf`      | Version constraints    |
+| `provider.tf`      | Provider configuration |
+| `variables.tf`     | Input variables        |
+| `terraform.tfvars` | Variable values        |
+| `locals.tf`        | Local values           |
+| `data.tf`          | Data sources           |
+| `outputs.tf`       | Outputs                |
+| `main.tf`          | Module orchestration   |
+
+This structure is commonly used in enterprise Terraform projects.
+
+---
+
+### 6. Child Modules Encapsulate Infrastructure
+
+Instead of placing AWS resources in the Root Module, each Child Module should own a specific part of the infrastructure.
+
+For example:
+
+* `modules/vpc`
+* `modules/ec2`
+* `modules/alb`
+* `modules/rds`
+
+Each module should manage only one responsibility, making it easier to reuse and test.
+
+---
+
+### 7. Modules Communicate Through Inputs and Outputs
+
+Terraform modules communicate using:
+
+* **Input Variables** – Data passed from the Root Module to a Child Module.
+* **Outputs** – Values returned from a Child Module back to the Root Module.
+
+This creates a clean interface between modules and reduces coupling.
+
+---
+
+### 8. Avoid Placeholder Module Blocks
+
+Creating empty module blocks before the corresponding module exists results in validation errors.
+
+Instead of:
+
+```hcl id="g8v2qy"
+module "vpc" {
+
+}
+```
+
+wait until the module has been implemented and includes a valid `source` attribute.
+
+This avoids unnecessary configuration errors.
+
+---
+
+### 9. Build Infrastructure Incrementally
+
+The Root Module should evolve gradually as new modules are created.
+
+For example:
+
+* Phase 3 – VPC Module
+* Phase 4 – Security Groups
+* Phase 5 – EC2
+* Phase 6 – Application Load Balancer
+* Phase 7 – Auto Scaling Group
+* Phase 8 – Amazon RDS
+
+Incremental development simplifies testing and troubleshooting.
+
+---
+
+### 10. Enterprise Terraform Is Built Around Modules
+
+Large Terraform projects rely heavily on modular design.
+
+A modular architecture provides:
+
+* Reusability
+* Scalability
+* Team collaboration
+* Easier maintenance
+* Clear ownership
+* Better testing
+
+Keeping the Root Module focused on orchestration while delegating infrastructure to Child Modules is an industry-standard practice.
+
+---
+
+## Summary
+
+After completing this step, the following lessons were learned:
+
+* The Root Module orchestrates Child Modules.
+* `main.tf` should remain simple and focused on orchestration.
+* Modules improve code reuse, maintainability, and scalability.
+* Terraform automatically loads all `.tf` files in the working directory.
+* Organizing files by responsibility improves readability.
+* Child Modules encapsulate individual infrastructure components.
+* Modules communicate through input variables and outputs.
+* Placeholder module blocks should be avoided until modules exist.
+* Infrastructure should be developed incrementally using reusable modules.
+* Modular design is a core principle of enterprise Terraform development.
+
+These lessons establish the architectural foundation for building scalable, maintainable, and production-ready Terraform projects using reusable modules and industry-standard Infrastructure as Code practices.
+
+---

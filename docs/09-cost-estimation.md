@@ -886,3 +886,126 @@ The following AWS resources have **not** been created:
 **Phase 2 – Step 2.7 (`terraform.tfvars`)** introduces environment-specific configuration through the `terraform.tfvars` file. Since it only supplies variable values and **does not create infrastructure**, the **estimated monthly AWS cost remains $0.00**.
 
 ---
+
+# AWS Cost
+
+## Phase 2 – Step 2.8: `main.tf`
+
+### Estimated AWS Cost
+
+| Resource                         | Status      | Estimated Monthly Cost |
+| -------------------------------- | ----------- | ---------------------: |
+| AWS Resources                    | Not Created |              **$0.00** |
+| **Total Estimated Monthly Cost** |             |              **$0.00** |
+
+---
+
+# Resources Created
+
+**None**
+
+This step focuses on creating the **Root Module** (`main.tf`) and preparing the project for a modular Terraform architecture. No AWS infrastructure is created, modified, or deleted.
+
+---
+
+# Why the Cost Is $0.00
+
+During **Step 2.8**, you:
+
+* Created the `main.tf` file.
+* Learned the purpose of the Root Module.
+* Designed the project for reusable Terraform modules.
+* Documented the future module orchestration.
+* Formatted and validated the Terraform configuration.
+* Verified the execution plan.
+
+These tasks affect only the local Terraform configuration and do **not** provision any AWS resources.
+
+---
+
+# `main.tf` Does Not Provision Infrastructure
+
+At this stage, the `main.tf` file serves only as the entry point for the Terraform project.
+
+It currently:
+
+* Documents the project structure.
+* Prepares the Root Module.
+* Defines the future orchestration strategy.
+
+It does **not**:
+
+* Create resources
+* Modify infrastructure
+* Delete infrastructure
+* Generate AWS charges
+
+Actual infrastructure provisioning will begin in the next phase when reusable Terraform modules are implemented.
+
+---
+
+# AWS Resources Provisioned
+
+The following AWS resources have **not** been created:
+
+* Amazon VPC
+* Public Subnets
+* Private Subnets
+* Internet Gateway
+* NAT Gateway
+* Route Tables
+* Security Groups
+* IAM Roles
+* Amazon EC2
+* Application Load Balancer (ALB)
+* Auto Scaling Group (ASG)
+* Amazon RDS (PostgreSQL)
+* Amazon S3 Bucket
+* Amazon DynamoDB Table
+* Amazon CloudWatch Resources
+
+---
+
+# AWS Billing Summary
+
+| AWS Service               | Status      | Estimated Monthly Cost |
+| ------------------------- | ----------- | ---------------------: |
+| Amazon VPC                | Not Created |                  $0.00 |
+| Amazon EC2                | Not Created |                  $0.00 |
+| Amazon RDS                | Not Created |                  $0.00 |
+| Application Load Balancer | Not Created |                  $0.00 |
+| Auto Scaling Group        | Not Created |                  $0.00 |
+| Amazon S3                 | Not Created |                  $0.00 |
+| Amazon DynamoDB           | Not Created |                  $0.00 |
+| Amazon CloudWatch         | Not Created |                  $0.00 |
+
+---
+
+# Cost Optimization Notes
+
+* `main.tf` currently contains documentation only.
+* No Terraform modules have been invoked.
+* No AWS API calls create infrastructure during this step.
+* Running `terraform fmt`, `terraform validate`, and `terraform plan` does not incur infrastructure provisioning costs.
+* AWS billing begins only after resources are created with `terraform apply` in later phases.
+
+---
+
+# Step Summary
+
+| Item                       | Status    |
+| -------------------------- | --------- |
+| AWS Resources Created      | ❌ None    |
+| Root Module Prepared       | ✅ Yes     |
+| Terraform Modules Created  | ❌ Not Yet |
+| Infrastructure Provisioned | ❌ No      |
+| Estimated Monthly AWS Cost | **$0.00** |
+| Safe to Continue           | ✅ Yes     |
+
+---
+
+## ✅ Conclusion
+
+**Phase 2 – Step 2.8 (`main.tf`)** completes the Terraform project foundation by establishing the Root Module and preparing the project for modular infrastructure. Since **no AWS resources are created**, the **estimated monthly AWS cost remains $0.00**.
+
+---

@@ -1660,3 +1660,224 @@ terraform/
 When variables no longer have default values, Terraform expects every required variable to be provided. Using `terraform.tfvars` (or environment-specific files such as `dev.tfvars`, `stage.tfvars`, and `prod.tfvars`) is the recommended enterprise approach because it keeps configuration separate from code and reduces the risk of deployment errors.
 
 ---
+
+# Troubleshooting
+
+This document records common issues encountered during the Terraform project, along with their causes, solutions, and recommended best practices.
+
+---
+
+# Issue: Empty Module Block
+
+## Problem
+
+While running:
+
+```bash id="k8zq1m"
+terraform validate
+```
+
+or
+
+```bash id="w2rj7c"
+terraform plan
+```
+
+Terraform reports an error related to an incomplete or invalid module block.
+
+Example:
+
+```text id="s5v9eh"
+Error: Missing required argument
+
+The argument "source" is required, but no definition was found.
+```
+
+---
+
+## Cause
+
+A module block has been created before the actual module exists.
+
+Example:
+
+```hcl id="j1x6dp"
+module "vpc" {
+
+}
+```
+
+Every Terraform module must include a `source` attribute that points to the module location.
+
+Since the module has not yet been implemented, Terraform cannot determine:
+
+* Where the module is located
+* What resources it contains
+* Which variables it expects
+
+---
+
+## Solution
+
+Only add module blocks **after** creating the corresponding module.
+
+Example:
+
+```text id="x8m4na"
+modules/
+└── vpc/
+```
+
+Once the module exists, reference it from the Root Module.
+
+Example:
+
+```hcl id="f6c2uy"
+module "vpc" {
+  source = "./modules/vpc"
+
+  project_name = var.project_name
+  environment  = var.environment
+  common_tags  = local.common_tags
+}
+```
+
+Until then, keep `main.tf` as a documented entry point.
+
+---
+
+# Issue: Large `main.tf`
+
+## Problem
+
+The `main.tf` file grows into hundreds or thousands of lines because every AWS resource is defined in a single file.
+
+Example:
+
+```text id="v7h9ka"
+main.tf
+
+├── VPC
+├── Internet Gateway
+├── Route Tables
+├── Security Groups
+├── EC2
+├── Application Load Balancer
+├── Auto Scaling Group
+├── RDS
+├── IAM
+└── CloudWatch
+```
+
+---
+
+## Cause
+
+All infrastructure components are implemented directly in the Root Module instead of being organized into reusable modules.
+
+This approach results in:
+
+* Large files
+* Duplicate code
+* Difficult maintenance
+* Poor readability
+* Limited reusability
+
+---
+
+## Solution
+
+Split the infrastructure into reusable modules, with each module responsible for a single component.
+
+Example structure:
+
+```text id="m5u4dr"
+modules/
+├── vpc/
+├── security-group/
+├── iam/
+├── alb/
+├── ec2/
+├── autoscaling/
+├── rds/
+└── monitoring/
+```
+
+The Root Module should simply orchestrate these modules.
+
+Example:
+
+```hcl id="y3k7pb"
+module "vpc" {
+  source = "./modules/vpc"
+}
+
+module "ec2" {
+  source = "./modules/ec2"
+}
+
+module "rds" {
+  source = "./modules/rds"
+}
+```
+
+This follows enterprise Terraform best practices and keeps the project scalable.
+
+---
+
+# Troubleshooting Summary
+
+| Issue                  | Cause                                                       | Solution                                                                                    |
+| ---------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **Empty module block** | Module has not been implemented and no `source` is defined. | Add module blocks only after creating the corresponding module and specifying its `source`. |
+| **Large `main.tf`**    | All infrastructure is written in one file.                  | Split the infrastructure into reusable modules and use `main.tf` only for orchestration.    |
+
+---
+
+# Best Practices
+
+* Keep `main.tf` focused on orchestration.
+* Add module blocks only after the module exists.
+* Use one module for each major infrastructure component.
+* Pass variables and local values into modules instead of hardcoding values.
+* Keep the Root Module clean and easy to read.
+* Validate the Terraform configuration after adding or modifying modules.
+
+---
+
+# Verification Commands
+
+```bash id="r4w8tn"
+# Format Terraform configuration
+terraform fmt
+
+# Validate Terraform configuration
+terraform validate
+
+# Preview infrastructure changes
+terraform plan
+```
+
+---
+
+# Related Files
+
+```text id="t6v9qn"
+terraform/
+│
+├── main.tf
+├── variables.tf
+├── locals.tf
+├── outputs.tf
+├── provider.tf
+├── versions.tf
+└── modules/
+```
+
+---
+
+## 📌 Note
+
+The **Root Module** should coordinate infrastructure, not implement it. Keeping `main.tf` small and delegating infrastructure to reusable modules results in cleaner, more maintainable, and production-ready Terraform projects that are easier to scale and collaborate on.
+
+---
