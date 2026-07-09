@@ -2251,3 +2251,897 @@ In **Step 2.6**, you'll create **`outputs.tf`**, where you'll learn how to displ
 Outputs make Terraform deployments easier to verify and integrate with other modules or automation workflows.
 
 ---
+
+# 🚀 Phase 2 – Step 2.6: Create `outputs.tf`
+
+**Duration:** 45–60 Minutes
+
+---
+
+# 🎯 Goal
+
+Learn how to expose useful information from Terraform after a deployment.
+
+Outputs are one of the most important Terraform concepts because they allow you to:
+
+- Display useful information
+- Pass values between modules
+- Integrate with CI/CD pipelines
+- Debug infrastructure
+- Feed values into other Terraform configurations
+
+---
+
+# 📖 Theory
+
+## What are Outputs?
+
+Outputs are values that Terraform displays after a successful deployment.
+
+They make it easy to view important resource information without searching through the AWS Management Console.
+
+Example:
+
+```text
+Apply complete!
+
+Outputs:
+
+vpc_id = "vpc-0abc123"
+
+alb_dns_name = "linkedin-dev-alb-123456.ap-south-1.elb.amazonaws.com"
+
+rds_endpoint = "linkedin-db.xxxxx.amazonaws.com"
+```
+
+Instead of manually locating these values in AWS, Terraform displays them automatically.
+
+---
+
+# Why Use Outputs?
+
+Imagine your infrastructure creates:
+
+- Amazon VPC
+- Amazon EC2
+- Application Load Balancer
+- Amazon RDS
+
+Without outputs:
+
+- You must search AWS Console for IDs.
+- You must manually copy DNS names.
+- You must locate database endpoints.
+
+With outputs:
+
+Terraform automatically displays this information after deployment.
+
+This saves time and reduces mistakes.
+
+---
+
+# Enterprise Use Cases
+
+Outputs are commonly used to expose:
+
+- VPC ID
+- Public Subnet IDs
+- Private Subnet IDs
+- Security Group IDs
+- Application Load Balancer DNS Name
+- RDS Endpoint
+- IAM Role ARN
+- EC2 Instance IDs
+
+In CI/CD pipelines, these outputs are often consumed by later deployment stages.
+
+---
+
+# What We'll Output in Phase 2
+
+Since no AWS resources have been created yet, we'll expose values from the AWS Data Sources configured in `data.tf`.
+
+The outputs will include:
+
+| Output | Source |
+|---------|--------|
+| AWS Account ID | `aws_caller_identity` |
+| AWS Region | `aws_region` |
+| Availability Zones | `aws_availability_zones` |
+
+---
+
+# Create `outputs.tf`
+
+Navigate to:
+
+```text
+terraform/
+```
+
+Open or create:
+
+```text
+outputs.tf
+```
+
+---
+
+# Add the Following Code
+
+```hcl
+#############################################
+# AWS Account Information
+#############################################
+
+output "aws_account_id" {
+  description = "AWS Account ID currently in use."
+  value       = data.aws_caller_identity.current.account_id
+}
+
+#############################################
+# AWS Region
+#############################################
+
+output "aws_region" {
+  description = "AWS Region where Terraform is running."
+  value       = data.aws_region.current.name
+}
+
+#############################################
+# Availability Zones
+#############################################
+
+output "availability_zones" {
+  description = "Available Availability Zones in the selected AWS region."
+  value       = data.aws_availability_zones.available.names
+}
+```
+
+---
+
+# Understanding Every Output
+
+## 1. AWS Account ID
+
+```hcl
+output "aws_account_id"
+```
+
+This output retrieves the AWS Account ID from:
+
+```hcl
+data.aws_caller_identity.current.account_id
+```
+
+### Example Output
+
+```text
+123456789012
+```
+
+### Common Use Cases
+
+- IAM Policies
+- Globally unique S3 bucket names
+- Multi-account deployments
+- Account-specific automation
+
+---
+
+## 2. AWS Region
+
+```hcl
+output "aws_region"
+```
+
+This output displays the AWS Region currently configured in the provider.
+
+### Example Output
+
+```text
+ap-south-1
+```
+
+Because the value comes from a Data Source, Terraform always reports the actual Region being used.
+
+---
+
+## 3. Availability Zones
+
+```hcl
+output "availability_zones"
+```
+
+This output lists all available Availability Zones in the configured AWS Region.
+
+### Example Output
+
+```text
+[
+  "ap-south-1a",
+  "ap-south-1b",
+  "ap-south-1c"
+]
+```
+
+### Future Use Cases
+
+These Availability Zones will later be used when creating:
+
+- Public Subnets
+- Private Application Subnets
+- Private Database Subnets
+
+Using dynamic values makes the infrastructure portable across AWS Regions.
+
+---
+
+# How Outputs Are Used Later
+
+Outputs become especially valuable when working with modules.
+
+For example, the VPC module may expose the VPC ID:
+
+```hcl
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
+```
+
+Another module can then reference it:
+
+```hcl
+module.vpc.vpc_id
+```
+
+This is one of the core principles of modular Terraform design.
+
+Modules communicate with one another through outputs.
+
+---
+
+# Root Outputs vs Module Outputs
+
+Terraform supports two common types of outputs.
+
+| Type | Purpose |
+|------|---------|
+| Root Outputs | Display information after `terraform apply` |
+| Module Outputs | Share values between Terraform modules |
+
+Both use the same `output` block syntax.
+
+---
+
+# Outputs in CI/CD Pipelines
+
+Outputs are frequently consumed by deployment automation.
+
+Examples include:
+
+- Passing the ALB DNS name to application deployment jobs.
+- Supplying the RDS endpoint to configuration management.
+- Sharing VPC IDs with downstream Terraform modules.
+- Providing infrastructure details to automated testing pipelines.
+
+Outputs simplify integration between infrastructure and application deployment workflows.
+
+---
+
+# Validation
+
+Navigate to the Terraform directory.
+
+```bash
+cd terraform
+```
+
+---
+
+## Format the Configuration
+
+Run:
+
+```bash
+terraform fmt
+```
+
+---
+
+## Validate the Configuration
+
+Run:
+
+```bash
+terraform validate
+```
+
+### Expected Output
+
+```text
+Success! The configuration is valid.
+```
+
+---
+
+## Preview the Outputs
+
+Run:
+
+```bash
+terraform plan
+```
+
+Depending on whether the values can be resolved during planning, Terraform may display the outputs.
+
+After applying the configuration:
+
+```bash
+terraform apply
+```
+
+Terraform displays the output values automatically.
+
+You can also retrieve outputs later using:
+
+```bash
+terraform output
+```
+
+---
+
+# Project Structure
+
+After this step, your Terraform directory should look like:
+
+```text
+terraform/
+│
+├── versions.tf
+├── provider.tf
+├── variables.tf
+├── locals.tf
+├── data.tf
+├── outputs.tf
+├── main.tf
+├── modules/
+└── environments/
+```
+
+---
+
+# Documentation
+
+Update:
+
+```text
+docs/terraform-concepts.md
+```
+
+Add a new section.
+
+## Outputs
+
+Cover the following topics:
+
+- What are Outputs?
+- Why use Outputs?
+- Root Outputs
+- Module Outputs
+- CI/CD Integration
+
+---
+
+# Best Practices
+
+- Output only information that users or other modules require.
+- Use meaningful output names.
+- Add descriptions to every output.
+- Avoid exposing sensitive values unless necessary.
+- Use outputs for module communication.
+- Keep `outputs.tf` dedicated to output definitions.
+- Validate the configuration after adding new outputs.
+
+---
+
+# Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Output value not found | Incorrect resource or data source reference | Verify the referenced resource or data source exists. |
+| Output shows `(known after apply)` | Value depends on resources that have not yet been created | Run `terraform apply` to resolve the value. |
+| Incorrect output value | Wrong attribute referenced | Verify the attribute name in the Terraform documentation. |
+
+---
+
+# Summary
+
+In this step, you:
+
+- Created the `outputs.tf` file.
+- Learned the purpose of Terraform Outputs.
+- Displayed AWS Account ID.
+- Displayed the current AWS Region.
+- Displayed available Availability Zones.
+- Learned how outputs enable communication between modules.
+- Understood how outputs integrate with CI/CD pipelines.
+- Successfully validated the Terraform configuration.
+
+Outputs are a fundamental part of Terraform because they make infrastructure easier to understand, simplify module integration, and support automation across enterprise environments.
+
+---
+
+# Next Step
+
+In **Step 2.7**, you'll create **`main.tf`**, where you'll prepare the root Terraform configuration that will later connect all infrastructure modules such as:
+
+- VPC
+- Security Groups
+- EC2
+- Application Load Balancer
+- Auto Scaling Group
+- Amazon RDS
+
+This completes the Terraform project foundation and prepares the project for infrastructure provisioning in the next phase.
+
+---
+
+# 🚀 Phase 2 – Step 2.7: Create `terraform.tfvars`
+
+**Duration:** 30–45 Minutes
+
+---
+
+# 🎯 Goal
+
+Move environment-specific values out of the Terraform code and into a dedicated variables file.
+
+This follows enterprise best practices by separating:
+
+- Variable **definitions**
+- Variable **values**
+
+This makes the Terraform configuration reusable across multiple environments.
+
+---
+
+# 📖 Theory
+
+## What is `terraform.tfvars`?
+
+When Terraform detects a file named:
+
+```text
+terraform.tfvars
+```
+
+it automatically loads the variable values from that file.
+
+Instead of running:
+
+```bash
+terraform apply \
+-var="project_name=linkedin" \
+-var="environment=dev"
+```
+
+you simply create a file containing:
+
+```hcl
+project_name = "linkedin"
+environment  = "dev"
+aws_region   = "ap-south-1"
+```
+
+Terraform automatically reads these values during execution.
+
+---
+
+# Variable Flow
+
+```text
+variables.tf
+        │
+        ▼
+Defines Variables
+
+        │
+        ▼
+terraform.tfvars
+
+Provides Values
+
+        │
+        ▼
+provider.tf
+locals.tf
+modules
+resources
+```
+
+---
+
+# Why Use `.tfvars` Files?
+
+Imagine your infrastructure supports three environments.
+
+- Development
+- Staging
+- Production
+
+Without `.tfvars`:
+
+```text
+Edit variables.tf
+
+↓
+
+Deploy
+
+↓
+
+Edit again
+
+↓
+
+Deploy
+
+↓
+
+Edit again
+
+↓
+
+Deploy
+```
+
+This is error-prone and difficult to maintain.
+
+---
+
+With `.tfvars`:
+
+```text
+dev.tfvars
+
+stage.tfvars
+
+prod.tfvars
+```
+
+Simply choose the appropriate file during deployment.
+
+No Terraform code changes are required.
+
+---
+
+# Create `terraform.tfvars`
+
+Navigate to:
+
+```text
+terraform/
+```
+
+Create:
+
+```text
+terraform.tfvars
+```
+
+---
+
+# Add the Following Code
+
+```hcl
+#############################################
+# Project Configuration
+#############################################
+
+project_name = "linkedin"
+
+environment = "dev"
+
+#############################################
+# AWS Configuration
+#############################################
+
+aws_region = "ap-south-1"
+```
+
+---
+
+# What Happens Now?
+
+Terraform automatically loads:
+
+```hcl
+project_name = "linkedin"
+```
+
+This value is assigned to:
+
+```hcl
+variable "project_name"
+```
+
+Next:
+
+```hcl
+local.name_prefix
+```
+
+becomes:
+
+```text
+linkedin-dev
+```
+
+Finally, the AWS Provider reads:
+
+```hcl
+region = var.aws_region
+```
+
+which becomes:
+
+```text
+ap-south-1
+```
+
+No manual command-line variables are required.
+
+---
+
+# Variable Precedence
+
+Terraform resolves variables using the following order of precedence.
+
+| Priority | Source |
+|-----------|--------|
+| **1** | Command-line arguments (`-var`, `-var-file`) |
+| **2** | `*.auto.tfvars` |
+| **3** | `terraform.tfvars` |
+| **4** | Environment Variables (`TF_VAR_*`) |
+| **5** | Default values in `variables.tf` |
+
+Terraform always uses the highest-priority value available.
+
+---
+
+# Enterprise Best Practice
+
+At this point, your variables may still look like this:
+
+```hcl
+variable "project_name" {
+  description = "Name of the project."
+  type        = string
+  default     = "linkedin"
+}
+```
+
+Since values are now supplied through `terraform.tfvars`, the default values are no longer required.
+
+---
+
+# Update `variables.tf`
+
+Change:
+
+```hcl
+variable "project_name" {
+  description = "Name of the project."
+  type        = string
+  default     = "linkedin"
+}
+```
+
+to:
+
+```hcl
+variable "project_name" {
+  description = "Name of the project."
+  type        = string
+}
+```
+
+---
+
+Do the same for:
+
+- `environment`
+- `aws_region`
+
+---
+
+Keep the validation block for `environment`, but remove the default value.
+
+Example:
+
+```hcl
+variable "environment" {
+  description = "Deployment environment."
+  type        = string
+
+  validation {
+    condition = contains(
+      ["dev", "stage", "prod"],
+      var.environment
+    )
+
+    error_message = "Environment must be one of: dev, stage, or prod."
+  }
+}
+```
+
+---
+
+# Why Remove Defaults?
+
+Removing default values makes the variables **required**.
+
+Benefits include:
+
+- Prevents accidental deployments
+- Forces explicit configuration
+- Supports multiple environments
+- Follows production best practices
+- Improves deployment reliability
+
+Enterprise Terraform projects commonly use this approach.
+
+---
+
+# Validation
+
+Navigate to the Terraform directory.
+
+```bash
+cd terraform
+```
+
+---
+
+## Format the Configuration
+
+Run:
+
+```bash
+terraform fmt
+```
+
+---
+
+## Validate the Configuration
+
+Run:
+
+```bash
+terraform validate
+```
+
+Expected output:
+
+```text
+Success! The configuration is valid.
+```
+
+---
+
+## Generate an Execution Plan
+
+Run:
+
+```bash
+terraform plan
+```
+
+Expected behavior:
+
+Terraform automatically loads values from:
+
+```text
+terraform.tfvars
+```
+
+The outputs should remain the same as before because the variable values are now coming from the `.tfvars` file instead of defaults.
+
+---
+
+# Project Structure
+
+After this step, your project should look like:
+
+```text
+terraform/
+│
+├── versions.tf
+├── provider.tf
+├── variables.tf
+├── terraform.tfvars
+├── locals.tf
+├── data.tf
+├── outputs.tf
+├── main.tf
+├── modules/
+└── environments/
+```
+
+---
+
+# Documentation
+
+Update:
+
+```text
+docs/terraform-concepts.md
+```
+
+Add a new section.
+
+## `terraform.tfvars`
+
+Include the following topics:
+
+- What is `terraform.tfvars`?
+- Purpose of `.tfvars` files
+- Variable precedence
+- Why separate variable definitions from values?
+- Environment-specific configuration
+- Enterprise best practices
+
+---
+
+# Best Practices
+
+- Keep variable definitions in `variables.tf`.
+- Store environment-specific values in `.tfvars` files.
+- Remove unnecessary default values for production deployments.
+- Use separate `.tfvars` files for different environments.
+- Never commit sensitive `.tfvars` files containing secrets.
+- Validate the configuration after every change.
+
+---
+
+# Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Variable value not loaded | `terraform.tfvars` is missing or incorrectly named | Ensure the file is named exactly `terraform.tfvars`. |
+| Missing required variable | Default value removed and no value supplied | Add the value to `terraform.tfvars` or provide it using `-var` or `-var-file`. |
+| Validation error for `environment` | Invalid environment value | Use `dev`, `stage`, or `prod`. |
+
+---
+
+# Summary
+
+In this step, you:
+
+- Created the `terraform.tfvars` file.
+- Learned how Terraform automatically loads variable values.
+- Separated variable definitions from variable values.
+- Removed default values from `variables.tf`.
+- Learned Terraform variable precedence.
+- Adopted an enterprise-friendly configuration approach.
+- Successfully validated and planned the Terraform configuration.
+
+Using `terraform.tfvars` keeps Terraform configurations clean, reusable, and ready for multi-environment deployments. It is a standard practice in enterprise Infrastructure as Code projects.
+
+---
+
+# Next Step
+
+In the next phase, you'll begin creating actual AWS infrastructure using reusable Terraform modules, starting with networking components such as:
+
+- Amazon VPC
+- Public and Private Subnets
+- Internet Gateway
+- NAT Gateway
+- Route Tables
+
+The strong foundation built in Phase 2 will now support scalable, modular, and production-ready infrastructure provisioning.
+
+---

@@ -1919,3 +1919,736 @@ After completing this section, you should be able to confidently explain:
 These concepts are fundamental to writing dynamic, portable, and enterprise-ready Terraform configurations and are commonly discussed in DevOps, Cloud, and Infrastructure as Code interviews.
 
 ---
+
+# Interview Questions – Step 2.6: `outputs.tf`
+
+## Overview
+
+These interview questions cover the concepts learned while creating the **`outputs.tf`** file.
+
+The answers are written in an interview-friendly format and focus on Terraform Outputs, modular design, and enterprise DevOps best practices.
+
+---
+
+# 1. What are Terraform outputs?
+
+## Answer
+
+Terraform **Outputs** are values that Terraform displays after a successful deployment.
+
+They expose useful information about the infrastructure created or queried by Terraform.
+
+Outputs can reference:
+
+* Resources
+* Data Sources
+* Variables
+* Local Values
+* Module Outputs
+
+### Example
+
+```hcl
+output "aws_region" {
+  value = data.aws_region.current.name
+}
+```
+
+After running:
+
+```bash
+terraform apply
+```
+
+Terraform displays:
+
+```text
+Outputs:
+
+aws_region = "ap-south-1"
+```
+
+### Interview Tip
+
+> "Outputs provide a convenient way to expose important infrastructure information after deployment."
+
+---
+
+# 2. Why are outputs useful?
+
+## Answer
+
+Outputs eliminate the need to manually search the AWS Management Console for resource information.
+
+They automatically display useful values after deployment.
+
+Examples include:
+
+* VPC ID
+* Subnet IDs
+* Security Group IDs
+* ALB DNS Name
+* RDS Endpoint
+* EC2 Public IP
+
+### Benefits
+
+* Faster verification
+* Easier debugging
+* Better automation
+* Simplified module communication
+* CI/CD integration
+
+### Interview Tip
+
+> "Outputs make infrastructure information immediately available to users and automation tools."
+
+---
+
+# 3. Can one module use outputs from another module?
+
+## Answer
+
+**Yes.**
+
+This is one of the core concepts of modular Terraform.
+
+A module exposes values using an `output` block.
+
+Another module (or the root module) can reference those outputs.
+
+### Example
+
+Inside the VPC module:
+
+```hcl
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
+```
+
+Root module:
+
+```hcl
+module.vpc.vpc_id
+```
+
+Another module can then use this value:
+
+```hcl
+vpc_id = module.vpc.vpc_id
+```
+
+### Benefits
+
+* Loose coupling
+* Better modularity
+* Code reuse
+* Cleaner architecture
+
+---
+
+# 4. What's the difference between variables and outputs?
+
+## Answer
+
+Variables and outputs serve opposite purposes.
+
+### Variables
+
+* Receive input into Terraform
+* Configure infrastructure
+* Passed into modules
+
+### Outputs
+
+* Return information from Terraform
+* Display resource details
+* Passed out of modules
+
+### Comparison
+
+| Variables                 | Outputs                      |
+| ------------------------- | ---------------------------- |
+| Input to Terraform        | Output from Terraform        |
+| User provides values      | Terraform returns values     |
+| Declared using `variable` | Declared using `output`      |
+| Used for configuration    | Used for sharing information |
+
+### Interview Tip
+
+> "Variables bring data into Terraform, while outputs expose data from Terraform."
+
+---
+
+# 5. Can outputs contain sensitive values?
+
+## Answer
+
+**Yes.**
+
+Terraform supports marking outputs as **sensitive**.
+
+Example:
+
+```hcl
+output "db_password" {
+  value     = aws_db_instance.main.password
+  sensitive = true
+}
+```
+
+When marked as sensitive, Terraform hides the value in its console output.
+
+Example:
+
+```text
+db_password = (sensitive value)
+```
+
+### Best Practice
+
+Only mark outputs as sensitive when they contain confidential information such as:
+
+* Passwords
+* API Keys
+* Access Tokens
+* Private Keys
+* Secrets
+
+### Interview Tip
+
+> "Sensitive outputs prevent confidential values from being displayed in Terraform output."
+
+---
+
+# 6. How would you expose an ALB DNS name?
+
+## Answer
+
+The DNS name of an Application Load Balancer can be exposed using an output.
+
+Example:
+
+```hcl
+output "alb_dns_name" {
+  description = "Application Load Balancer DNS Name"
+
+  value = aws_lb.main.dns_name
+}
+```
+
+After deployment:
+
+```text
+alb_dns_name = linkedin-dev-alb-123456.ap-south-1.elb.amazonaws.com
+```
+
+This value can then be used by:
+
+* Developers
+* CI/CD pipelines
+* DNS configuration
+* Automated testing
+* Monitoring tools
+
+---
+
+# 7. How are outputs used in CI/CD pipelines?
+
+## Answer
+
+Outputs provide infrastructure information that later stages of a pipeline can consume.
+
+Examples include:
+
+* Deploying an application to an EC2 instance using its Public IP.
+* Updating DNS records using the ALB DNS name.
+* Connecting applications to an RDS database endpoint.
+* Passing the VPC ID to another Terraform deployment.
+
+Outputs can be retrieved using:
+
+```bash
+terraform output
+```
+
+Or in JSON format:
+
+```bash
+terraform output -json
+```
+
+This allows automation tools such as:
+
+* Jenkins
+* GitHub Actions
+* GitLab CI
+* Azure DevOps
+
+to consume Terraform outputs programmatically.
+
+### Interview Tip
+
+> "Terraform outputs act as the interface between infrastructure provisioning and application deployment."
+
+---
+
+# Quick Revision
+
+| Question                                        | Key Point                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| What are Terraform outputs?                     | Values Terraform displays after deployment.                                     |
+| Why are outputs useful?                         | They expose important infrastructure information without using the AWS Console. |
+| Can one module use outputs from another module? | Yes, module outputs enable communication between modules.                       |
+| Variables vs Outputs?                           | Variables are inputs; outputs are values returned by Terraform.                 |
+| Can outputs contain sensitive values?           | Yes, using `sensitive = true`.                                                  |
+| How would you expose an ALB DNS name?           | Create an output that references `aws_lb.main.dns_name`.                        |
+| How are outputs used in CI/CD?                  | They provide infrastructure values to deployment and automation pipelines.      |
+
+---
+
+# Interview Tips
+
+* Clearly explain that **outputs expose information**, while **variables accept input**.
+* Mention that module outputs are essential for modular Terraform design.
+* Explain that sensitive outputs should be hidden using the `sensitive` argument.
+* Use practical examples such as exposing an ALB DNS name or an RDS endpoint.
+* Highlight that CI/CD pipelines frequently consume Terraform outputs using `terraform output` or `terraform output -json`.
+
+---
+
+# Summary
+
+After completing this section, you should be able to confidently explain:
+
+* What Terraform Outputs are.
+* Why Outputs are useful.
+* How modules share information using Outputs.
+* The difference between Variables and Outputs.
+* How to protect sensitive output values.
+* How to expose useful infrastructure details such as an ALB DNS name.
+* How Outputs integrate with CI/CD pipelines.
+
+These concepts are fundamental to modular Terraform development and are commonly discussed in DevOps, Cloud, and Infrastructure as Code interviews.
+
+---
+
+# Interview Question
+
+## Question
+
+**Why does `terraform plan` show outputs even though no infrastructure exists?**
+
+---
+
+## Interview Answer
+
+> "Terraform Outputs are not limited to resources—they can also reference Data Sources, Variables, Locals, and Module Outputs.
+>
+> In this phase of the project, my Outputs are based on AWS Data Sources such as the current AWS account, configured AWS Region, and available Availability Zones.
+>
+> During the `terraform plan` phase, Terraform queries the AWS APIs to retrieve this existing information. Since Data Sources are read-only and represent resources or metadata that already exist, Terraform can resolve and display these Outputs even though no new infrastructure is being created.
+>
+> In contrast, Outputs that reference resources being created during the current deployment often display **'(known after apply)'** because those values don't exist until Terraform provisions the infrastructure."
+
+---
+
+## Follow-up Explanation
+
+### Outputs Referencing Data Sources
+
+These values can usually be resolved during the **plan** phase because they already exist in AWS.
+
+Examples include:
+
+* AWS Account ID
+* AWS Region
+* Availability Zones
+* Existing VPC IDs
+* Existing IAM Roles
+
+Example:
+
+```hcl id="9s5q0b"
+output "aws_region" {
+  value = data.aws_region.current.name
+}
+```
+
+Terraform retrieves the value immediately from AWS.
+
+---
+
+### Outputs Referencing Resources
+
+If an Output depends on a resource that Terraform is about to create, the value is unknown until the resource exists.
+
+Example:
+
+```hcl id="4w7mna"
+output "alb_dns_name" {
+  value = aws_lb.main.dns_name
+}
+```
+
+Before deployment, Terraform displays:
+
+```text id="v0ixsm"
+alb_dns_name = (known after apply)
+```
+
+After running:
+
+```bash id="u1tqeo"
+terraform apply
+```
+
+Terraform displays the actual DNS name.
+
+---
+
+## Interview Tip
+
+A simple way to remember the difference is:
+
+* **Data Sources** → Existing information → Usually available during `terraform plan`.
+* **Resources** → New infrastructure → Often available only after `terraform apply`.
+
+---
+
+## Key Takeaway
+
+When answering this question in an interview, emphasize these points:
+
+* Outputs can reference both **Data Sources** and **Resources**.
+* Data Sources query existing AWS information and are typically resolved during `terraform plan`.
+* Resources are created during `terraform apply`, so their values may not be available until deployment completes.
+* Terraform displays **`(known after apply)`** for values that depend on resources that do not yet exist.
+
+This demonstrates a solid understanding of Terraform's execution model and the relationship between **Resources**, **Data Sources**, and **Outputs**.
+
+---
+
+# Interview Questions – Step 2.7: `terraform.tfvars`
+
+## Overview
+
+These interview questions cover the concepts learned while creating the **`terraform.tfvars`** file.
+
+The answers are written in an interview-friendly format and focus on Terraform variable management, environment-specific configuration, and enterprise best practices.
+
+---
+
+# 1. What is the purpose of `terraform.tfvars`?
+
+## Answer
+
+The `terraform.tfvars` file is used to provide values for variables declared in `variables.tf`.
+
+Instead of hardcoding values or supplying them through the command line every time, Terraform automatically loads values from `terraform.tfvars`.
+
+### Example
+
+**variables.tf**
+
+```hcl
+variable "project_name" {
+  type = string
+}
+```
+
+**terraform.tfvars**
+
+```hcl
+project_name = "linkedin"
+
+environment = "dev"
+
+aws_region = "ap-south-1"
+```
+
+This separates **variable definitions** from **variable values**, making the configuration cleaner and easier to maintain.
+
+### Interview Tip
+
+> "`variables.tf` defines what inputs are required, while `terraform.tfvars` provides the values for those inputs."
+
+---
+
+# 2. How does Terraform automatically discover `terraform.tfvars`?
+
+## Answer
+
+Terraform automatically loads a file named:
+
+```text
+terraform.tfvars
+```
+
+from the current working directory.
+
+No additional command-line arguments are required.
+
+Example:
+
+```bash
+terraform plan
+```
+
+Terraform automatically reads:
+
+```text
+terraform.tfvars
+```
+
+before executing the plan.
+
+Terraform also automatically loads any file ending with:
+
+```text
+*.auto.tfvars
+```
+
+---
+
+# 3. What is the difference between `variables.tf` and `terraform.tfvars`?
+
+## Answer
+
+Although they work together, they serve different purposes.
+
+### `variables.tf`
+
+* Declares variables
+* Defines data types
+* Adds descriptions
+* Includes validation rules
+* Does not usually contain environment-specific values
+
+### `terraform.tfvars`
+
+* Supplies values for variables
+* Environment-specific
+* Automatically loaded by Terraform
+* Keeps configuration separate from code
+
+### Comparison
+
+| `variables.tf`                      | `terraform.tfvars`                                    |
+| ----------------------------------- | ----------------------------------------------------- |
+| Declares variables                  | Assigns values to variables                           |
+| Defines types and validation        | Contains environment-specific values                  |
+| Part of the Terraform configuration | Configuration data only                               |
+| Usually committed to Git            | May be committed or ignored depending on its contents |
+
+### Interview Tip
+
+> "`variables.tf` defines the interface, while `terraform.tfvars` provides the implementation for a specific environment."
+
+---
+
+# 4. Can you have multiple `.tfvars` files?
+
+## Answer
+
+**Yes.**
+
+Enterprise projects commonly maintain separate variable files for each environment.
+
+Example:
+
+```text
+dev.tfvars
+
+stage.tfvars
+
+prod.tfvars
+```
+
+Each file contains values specific to that environment.
+
+Example:
+
+**dev.tfvars**
+
+```hcl
+environment = "dev"
+
+aws_region = "ap-south-1"
+```
+
+**prod.tfvars**
+
+```hcl
+environment = "prod"
+
+aws_region = "us-east-1"
+```
+
+This allows the same Terraform code to be reused across multiple environments.
+
+---
+
+# 5. How would you deploy to Stage using `stage.tfvars`?
+
+## Answer
+
+Use the `-var-file` option when running Terraform.
+
+Example:
+
+```bash
+terraform plan -var-file="stage.tfvars"
+```
+
+or
+
+```bash
+terraform apply -var-file="stage.tfvars"
+```
+
+Terraform loads the values from `stage.tfvars` instead of relying on `terraform.tfvars` or default values.
+
+This is the standard approach for deploying different environments using the same Terraform configuration.
+
+---
+
+# 6. Should secrets be stored in `terraform.tfvars`?
+
+## Answer
+
+**Generally, no.**
+
+Sensitive values such as:
+
+* Passwords
+* API Keys
+* Access Tokens
+* Database Credentials
+* Private Keys
+
+should not be stored in a plain-text `terraform.tfvars` file that is committed to version control.
+
+### Better Alternatives
+
+* Environment variables (`TF_VAR_*`)
+* Secret management services such as AWS Secrets Manager or HashiCorp Vault
+* CI/CD pipeline secrets
+* Encrypted `.tfvars` files (where appropriate)
+
+### Best Practice
+
+If a `.tfvars` file contains sensitive values, it should usually be excluded from Git using `.gitignore`.
+
+### Interview Tip
+
+> "Never commit sensitive credentials to a public repository. Use secure secret management instead."
+
+---
+
+# 7. What is Terraform's variable precedence?
+
+## Answer
+
+Terraform resolves variable values using a defined order of precedence.
+
+Higher-priority sources override lower-priority ones.
+
+| Priority | Source                                          |
+| -------- | ----------------------------------------------- |
+| **1**    | Command-line arguments (`-var` and `-var-file`) |
+| **2**    | `*.auto.tfvars` files                           |
+| **3**    | `terraform.tfvars`                              |
+| **4**    | Environment variables (`TF_VAR_*`)              |
+| **5**    | Default values in `variables.tf`                |
+
+### Example
+
+Suppose:
+
+**variables.tf**
+
+```hcl
+default = "dev"
+```
+
+**terraform.tfvars**
+
+```hcl
+environment = "stage"
+```
+
+Command:
+
+```bash
+terraform plan -var="environment=prod"
+```
+
+Terraform uses:
+
+```text
+prod
+```
+
+because command-line arguments have the highest precedence.
+
+---
+
+# Example Deployment with Another Variable File
+
+To deploy using a different environment-specific configuration file:
+
+```bash
+terraform plan -var-file="stage.tfvars"
+```
+
+Similarly, for production:
+
+```bash
+terraform apply -var-file="prod.tfvars"
+```
+
+This allows the same Terraform configuration to be reused across multiple environments without modifying the source code.
+
+---
+
+# Quick Revision
+
+| Question                                                  | Key Point                                                                                    |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| What is the purpose of `terraform.tfvars`?                | Stores values for variables declared in `variables.tf`.                                      |
+| How does Terraform discover `terraform.tfvars`?           | It is automatically loaded when present in the working directory.                            |
+| Difference between `variables.tf` and `terraform.tfvars`? | `variables.tf` defines variables; `terraform.tfvars` assigns values.                         |
+| Can you have multiple `.tfvars` files?                    | Yes, commonly one per environment (dev, stage, prod).                                        |
+| How do you deploy using `stage.tfvars`?                   | Use `terraform plan -var-file="stage.tfvars"` or `terraform apply -var-file="stage.tfvars"`. |
+| Should secrets be stored in `terraform.tfvars`?           | No. Use secure secret management or environment variables.                                   |
+| What is Terraform's variable precedence?                  | CLI → `*.auto.tfvars` → `terraform.tfvars` → Environment Variables → Default Values.         |
+
+---
+
+# Interview Tips
+
+* Clearly explain the difference between **declaring variables** and **assigning values**.
+* Mention that `terraform.tfvars` is automatically loaded, while other `.tfvars` files require the `-var-file` option.
+* Explain why environment-specific `.tfvars` files are commonly used in enterprise projects.
+* Emphasize that secrets should never be committed to version control.
+* Be prepared to explain Terraform's variable precedence in the correct order.
+
+---
+
+# Summary
+
+After completing this section, you should be able to confidently explain:
+
+* The purpose of `terraform.tfvars`.
+* How Terraform automatically discovers and loads `terraform.tfvars`.
+* The difference between `variables.tf` and `terraform.tfvars`.
+* How to manage multiple environments using separate `.tfvars` files.
+* How to deploy using a custom variable file.
+* Why secrets should not be stored in plain-text `.tfvars` files.
+* Terraform's variable precedence order.
+
+These concepts are fundamental to building scalable, secure, and enterprise-ready Terraform projects and are frequently discussed in DevOps, Cloud, and Infrastructure as Code interviews.
+
+---

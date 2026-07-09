@@ -1009,3 +1009,436 @@ After completing this step, the following lessons were learned:
 These lessons establish a solid foundation for using Terraform Data Sources effectively in real-world AWS infrastructure projects.
 
 ---
+
+# Lessons Learned
+
+## Phase 2 – Step 2.6: `outputs.tf`
+
+This document captures the key concepts and best practices learned while creating the `outputs.tf` file.
+
+---
+
+## Key Takeaways
+
+### 1. Outputs Expose Useful Terraform Values
+
+Terraform Outputs display important information after a deployment or when queried using the `terraform output` command.
+
+Instead of manually searching the AWS Management Console, Terraform can display values such as:
+
+* AWS Account ID
+* AWS Region
+* Availability Zones
+* VPC ID
+* EC2 Public IP
+* ALB DNS Name
+* RDS Endpoint
+
+Outputs provide quick access to information that is frequently needed after infrastructure provisioning.
+
+---
+
+### 2. Outputs Connect Terraform Modules
+
+One of the primary purposes of Outputs is to enable communication between Terraform modules.
+
+For example, a VPC module can expose its VPC ID:
+
+```hcl id="n8k4xy"
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
+```
+
+Another module can consume it:
+
+```hcl id="u5d2jq"
+module.vpc.vpc_id
+```
+
+This keeps modules loosely coupled and reusable.
+
+---
+
+### 3. Outputs Simplify Automation
+
+Outputs are widely used in automation and deployment pipelines.
+
+CI/CD tools such as:
+
+* Jenkins
+* GitHub Actions
+* GitLab CI
+* Azure DevOps
+
+can retrieve Terraform Outputs and use them in later stages.
+
+Examples include:
+
+* Deploying an application using an EC2 Public IP
+* Updating DNS records using an ALB DNS name
+* Configuring applications with an RDS endpoint
+* Passing infrastructure information to other Terraform projects
+
+Outputs create a clean interface between infrastructure provisioning and application deployment.
+
+---
+
+### 4. Outputs Improve Troubleshooting
+
+Outputs make it easier to verify infrastructure without opening the AWS Console.
+
+Instead of manually locating resources, Terraform displays the required information immediately.
+
+This speeds up:
+
+* Infrastructure verification
+* Debugging
+* Validation
+* Operational troubleshooting
+
+---
+
+### 5. Data Source Outputs Are Available Without Creating Resources
+
+Outputs can reference Terraform Data Sources as well as Resources.
+
+For example:
+
+```hcl id="x4f8ae"
+output "aws_region" {
+  value = data.aws_region.current.name
+}
+```
+
+Because Data Sources only retrieve existing AWS information, these outputs can often be displayed without provisioning any infrastructure.
+
+This is useful for validating AWS configuration before deploying resources.
+
+---
+
+### 6. Outputs Can Reference Multiple Terraform Objects
+
+An Output can expose values from:
+
+* Resources
+* Data Sources
+* Variables
+* Local Values
+* Module Outputs
+
+This flexibility allows Outputs to provide meaningful information at different stages of a Terraform project.
+
+---
+
+### 7. Sensitive Outputs Should Be Protected
+
+Some Outputs may contain confidential information such as:
+
+* Database passwords
+* API Keys
+* Access Tokens
+* Private Keys
+
+Terraform supports marking Outputs as sensitive.
+
+Example:
+
+```hcl id="v9g1lc"
+output "db_password" {
+  value     = aws_db_instance.main.password
+  sensitive = true
+}
+```
+
+Sensitive Outputs are hidden from normal console output, helping protect confidential information.
+
+---
+
+### 8. Use Descriptive Output Names
+
+Output names should clearly describe the information they expose.
+
+Examples:
+
+* `aws_account_id`
+* `aws_region`
+* `availability_zones`
+* `vpc_id`
+* `alb_dns_name`
+* `rds_endpoint`
+
+Descriptive names improve readability and make module integration easier.
+
+---
+
+### 9. Organize Outputs in a Dedicated File
+
+Keeping all Outputs in `outputs.tf` improves project organization.
+
+A typical enterprise Terraform structure includes:
+
+* `versions.tf`
+* `provider.tf`
+* `variables.tf`
+* `locals.tf`
+* `data.tf`
+* `outputs.tf`
+* `main.tf`
+
+Following this structure makes the project easier to navigate and maintain.
+
+---
+
+### 10. Outputs Are an Essential Part of Modular Terraform
+
+Outputs define the public interface of a Terraform module.
+
+Without Outputs, modules cannot easily share information.
+
+Well-designed Outputs improve:
+
+* Module reusability
+* Code organization
+* Infrastructure automation
+* Long-term maintainability
+
+They are a fundamental building block of scalable Terraform projects.
+
+---
+
+## Summary
+
+After completing this step, the following lessons were learned:
+
+* Outputs expose useful Terraform values after deployment.
+* Outputs are commonly used to connect Terraform modules.
+* Outputs simplify automation and CI/CD integration.
+* Outputs improve troubleshooting by displaying important infrastructure information.
+* Data Source Outputs can provide useful information without creating resources.
+* Outputs can reference Resources, Data Sources, Variables, Locals, and Module Outputs.
+* Sensitive Outputs should be protected using the `sensitive` argument.
+* Clear and descriptive Output names improve maintainability.
+* Keeping Outputs in a dedicated `outputs.tf` file follows enterprise best practices.
+* Outputs are essential for building modular, reusable, and production-ready Terraform projects.
+
+These lessons provide a strong foundation for using Terraform Outputs effectively in real-world Infrastructure as Code (IaC) projects.
+
+---
+
+# Lessons Learned
+
+## Phase 2 – Step 2.7: `terraform.tfvars`
+
+This document captures the key concepts and best practices learned while creating the `terraform.tfvars` file and updating `variables.tf`.
+
+---
+
+## Key Takeaways
+
+### 1. `variables.tf` Defines the Inputs
+
+The `variables.tf` file defines the interface of a Terraform project.
+
+It specifies:
+
+* Variable names
+* Data types
+* Descriptions
+* Validation rules
+* Whether a value is required
+
+It does **not** contain environment-specific configuration.
+
+Example:
+
+```hcl id="d2r9fk"
+variable "project_name" {
+  description = "Name of the project."
+  type        = string
+}
+```
+
+---
+
+### 2. `terraform.tfvars` Supplies the Values
+
+The `terraform.tfvars` file provides values for the variables declared in `variables.tf`.
+
+Example:
+
+```hcl id="mtzgr5"
+project_name = "linkedin"
+
+environment = "dev"
+
+aws_region = "ap-south-1"
+```
+
+Terraform automatically loads this file during execution, eliminating the need to repeatedly pass values using command-line arguments.
+
+---
+
+### 3. Separate Definitions from Configuration
+
+A key enterprise practice is separating **what variables exist** from **what values they contain**.
+
+* `variables.tf` defines the expected inputs.
+* `terraform.tfvars` supplies environment-specific values.
+
+This separation improves:
+
+* Reusability
+* Readability
+* Maintainability
+* Scalability
+
+The same Terraform code can be reused across multiple environments simply by changing the variable file.
+
+---
+
+### 4. Removing Default Values Makes Variables Explicit
+
+Removing default values forces Terraform to require an explicit value for each variable.
+
+Benefits include:
+
+* Prevents accidental deployments
+* Encourages intentional configuration
+* Supports production environments
+* Reduces deployment mistakes
+
+For example:
+
+```hcl id="ujt0hj"
+variable "aws_region" {
+  description = "AWS region where resources will be deployed."
+  type        = string
+}
+```
+
+Terraform now expects the value to be provided through `terraform.tfvars`, another variable file, or the command line.
+
+---
+
+### 5. Environment-Specific Configuration Improves Reusability
+
+Different environments often require different settings.
+
+Examples include:
+
+* Development
+* Staging
+* Production
+
+Using separate `.tfvars` files allows the same Terraform code to be reused without modification.
+
+Example:
+
+```text id="w13w2k"
+dev.tfvars
+
+stage.tfvars
+
+prod.tfvars
+```
+
+This approach is widely used in enterprise Infrastructure as Code projects.
+
+---
+
+### 6. Understand Terraform Variable Precedence
+
+Terraform resolves variables from multiple sources using a defined order of precedence.
+
+Higher-priority sources override lower-priority ones.
+
+Understanding this behavior helps avoid unexpected deployments and simplifies troubleshooting.
+
+---
+
+### 7. Keep Configuration Flexible
+
+Hardcoding values directly in Terraform code makes projects difficult to reuse.
+
+Using variable files allows the configuration to adapt to different:
+
+* AWS Regions
+* Environments
+* Projects
+* Accounts
+
+without modifying the Terraform configuration itself.
+
+---
+
+### 8. Keep Sensitive Values Out of Version Control
+
+Although `terraform.tfvars` is useful for configuration, it should not contain sensitive information if the file will be committed to Git.
+
+Sensitive values such as:
+
+* Passwords
+* API Keys
+* Secret Tokens
+* Private Keys
+
+should be stored securely using:
+
+* Environment Variables
+* AWS Secrets Manager
+* HashiCorp Vault
+* CI/CD Secret Stores
+
+This follows security best practices.
+
+---
+
+### 9. Validate After Configuration Changes
+
+After updating variables or `.tfvars` files, always run:
+
+```bash id="xv0rte"
+terraform fmt
+
+terraform validate
+
+terraform plan
+```
+
+This ensures that the configuration is properly formatted, valid, and using the expected variable values before deployment.
+
+---
+
+### 10. Follow Enterprise Terraform Standards
+
+Enterprise Terraform projects commonly follow this pattern:
+
+* `variables.tf` defines the interface.
+* `terraform.tfvars` supplies environment-specific values.
+* Separate `.tfvars` files are used for each environment.
+* Defaults are removed for required production variables.
+* Infrastructure code remains reusable and environment-agnostic.
+
+This structure improves collaboration, scalability, and long-term maintainability.
+
+---
+
+## Summary
+
+After completing this step, the following lessons were learned:
+
+* `variables.tf` defines the input variables for the Terraform project.
+* `terraform.tfvars` supplies environment-specific values for those variables.
+* Separating variable definitions from configuration improves maintainability and reuse.
+* Removing default values makes required variables explicit and prevents accidental deployments.
+* Multiple `.tfvars` files support development, staging, and production environments.
+* Understanding variable precedence helps prevent configuration errors.
+* Flexible configuration reduces hardcoding and improves portability.
+* Sensitive values should be managed securely instead of being stored in version-controlled files.
+* Validation should be performed after every configuration change.
+* Following enterprise Terraform standards results in scalable, secure, and production-ready Infrastructure as Code.
+
+These lessons provide a strong foundation for managing Terraform configuration across multiple environments using industry-standard best practices.
+
+---

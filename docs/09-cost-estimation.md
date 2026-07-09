@@ -643,3 +643,246 @@ The following AWS resources have **not** been created:
 **Phase 2 – Step 2.5 (`data.tf`)** introduces Terraform Data Sources for retrieving information from AWS. Since Data Sources only perform **read-only API queries** and **do not provision resources**, the **estimated AWS cost remains $0.00**.
 
 ---
+
+# AWS Cost
+
+## Phase 2 – Step 2.6: `outputs.tf`
+
+### Estimated AWS Cost
+
+| Resource                 | Status      | Estimated Cost |
+| ------------------------ | ----------- | -------------: |
+| AWS Resources            | Not Created |      **$0.00** |
+| **Total Estimated Cost** |             |      **$0.00** |
+
+---
+
+# Resources Created
+
+**None**
+
+This step focuses on defining Terraform **Outputs** to expose useful information after deployment. No AWS infrastructure is created, modified, or deleted.
+
+---
+
+# Why the Cost Is $0.00
+
+During **Step 2.6**, you:
+
+* Created the `outputs.tf` file.
+* Defined outputs for AWS Account ID.
+* Defined outputs for the current AWS Region.
+* Defined outputs for Availability Zones.
+* Learned how outputs are used by modules.
+* Learned how outputs integrate with CI/CD pipelines.
+* Formatted and validated the Terraform configuration.
+
+These activities modify only the Terraform configuration and do **not** provision any AWS resources.
+
+---
+
+# Outputs Do Not Create Infrastructure
+
+Terraform Outputs are **read-only values** that display information after Terraform operations.
+
+Outputs can expose values such as:
+
+* AWS Account ID
+* AWS Region
+* Availability Zones
+* VPC ID
+* EC2 Instance ID
+* ALB DNS Name
+* RDS Endpoint
+
+Outputs simply display existing information—they **do not** create, update, or delete infrastructure.
+
+---
+
+# AWS Resources Provisioned
+
+The following AWS resources have **not** been created:
+
+* Amazon VPC
+* Public Subnets
+* Private Subnets
+* Internet Gateway
+* NAT Gateway
+* Route Tables
+* Security Groups
+* IAM Roles
+* Amazon EC2
+* Application Load Balancer (ALB)
+* Auto Scaling Group (ASG)
+* Amazon RDS (PostgreSQL)
+* Amazon S3 Bucket
+* Amazon DynamoDB Table
+* Amazon CloudWatch Resources
+
+---
+
+# AWS Billing Summary
+
+| AWS Service               | Status      | Estimated Cost |
+| ------------------------- | ----------- | -------------: |
+| Amazon VPC                | Not Created |          $0.00 |
+| Amazon EC2                | Not Created |          $0.00 |
+| Amazon RDS                | Not Created |          $0.00 |
+| Application Load Balancer | Not Created |          $0.00 |
+| Auto Scaling Group        | Not Created |          $0.00 |
+| Amazon S3                 | Not Created |          $0.00 |
+| Amazon DynamoDB           | Not Created |          $0.00 |
+| Amazon CloudWatch         | Not Created |          $0.00 |
+
+---
+
+# Cost Optimization Notes
+
+* Outputs do not create infrastructure.
+* Outputs simply expose values from resources, data sources, variables, or locals.
+* Defining outputs has no impact on AWS billing.
+* AWS charges begin only after infrastructure is provisioned using `terraform apply`.
+
+---
+
+# Step Summary
+
+| Item                       | Status    |
+| -------------------------- | --------- |
+| AWS Resources Created      | ❌ None    |
+| Outputs Configured         | ✅ Yes     |
+| Infrastructure Provisioned | ❌ No      |
+| Estimated AWS Cost         | **$0.00** |
+| Safe to Continue           | ✅ Yes     |
+
+---
+
+## ✅ Conclusion
+
+**Phase 2 – Step 2.6 (`outputs.tf`)** introduces Terraform Outputs, which expose useful infrastructure information after deployment. Since **Outputs do not create infrastructure**, the **estimated AWS cost for this step remains $0.00**.
+
+---
+
+# AWS Cost
+
+## Phase 2 – Step 2.7: `terraform.tfvars`
+
+### Estimated AWS Cost
+
+| Resource                         | Status      | Estimated Monthly Cost |
+| -------------------------------- | ----------- | ---------------------: |
+| AWS Resources                    | Not Created |              **$0.00** |
+| **Total Estimated Monthly Cost** |             |              **$0.00** |
+
+---
+
+# Resources Created
+
+**None**
+
+This step focuses on configuring environment-specific variables using the `terraform.tfvars` file. No AWS infrastructure is created, modified, or deleted.
+
+---
+
+# Why the Cost Is $0.00
+
+During **Step 2.7**, you:
+
+* Created the `terraform.tfvars` file.
+* Moved environment-specific values out of `variables.tf`.
+* Separated variable definitions from variable values.
+* Updated variables to remove default values.
+* Learned Terraform variable precedence.
+* Formatted, validated, and planned the Terraform configuration.
+
+These activities only modify the local Terraform configuration and do **not** provision any AWS resources.
+
+---
+
+# `terraform.tfvars` Does Not Create Infrastructure
+
+The `terraform.tfvars` file is a configuration file that provides values for variables declared in `variables.tf`.
+
+It can define values such as:
+
+* Project Name
+* Environment
+* AWS Region
+* Instance Type
+* CIDR Blocks
+* Database Configuration
+
+The file simply supplies input values to Terraform.
+
+It does **not**:
+
+* Create AWS resources
+* Modify existing infrastructure
+* Delete infrastructure
+* Generate AWS charges
+
+---
+
+# AWS Resources Provisioned
+
+The following AWS resources have **not** been created:
+
+* Amazon VPC
+* Public Subnets
+* Private Subnets
+* Internet Gateway
+* NAT Gateway
+* Route Tables
+* Security Groups
+* IAM Roles
+* Amazon EC2
+* Application Load Balancer (ALB)
+* Auto Scaling Group (ASG)
+* Amazon RDS (PostgreSQL)
+* Amazon S3 Bucket
+* Amazon DynamoDB Table
+* Amazon CloudWatch Resources
+
+---
+
+# AWS Billing Summary
+
+| AWS Service               | Status      | Estimated Monthly Cost |
+| ------------------------- | ----------- | ---------------------: |
+| Amazon VPC                | Not Created |                  $0.00 |
+| Amazon EC2                | Not Created |                  $0.00 |
+| Amazon RDS                | Not Created |                  $0.00 |
+| Application Load Balancer | Not Created |                  $0.00 |
+| Auto Scaling Group        | Not Created |                  $0.00 |
+| Amazon S3                 | Not Created |                  $0.00 |
+| Amazon DynamoDB           | Not Created |                  $0.00 |
+| Amazon CloudWatch         | Not Created |                  $0.00 |
+
+---
+
+# Cost Optimization Notes
+
+* `terraform.tfvars` only supplies input values to Terraform.
+* Changing values in `terraform.tfvars` affects configuration, not infrastructure.
+* Running `terraform fmt`, `terraform validate`, or `terraform plan` does not create AWS resources.
+* AWS charges begin only after infrastructure is provisioned using `terraform apply`.
+
+---
+
+# Step Summary
+
+| Item                          | Status    |
+| ----------------------------- | --------- |
+| AWS Resources Created         | ❌ None    |
+| `terraform.tfvars` Configured | ✅ Yes     |
+| Infrastructure Provisioned    | ❌ No      |
+| Estimated Monthly AWS Cost    | **$0.00** |
+| Safe to Continue              | ✅ Yes     |
+
+---
+
+## ✅ Conclusion
+
+**Phase 2 – Step 2.7 (`terraform.tfvars`)** introduces environment-specific configuration through the `terraform.tfvars` file. Since it only supplies variable values and **does not create infrastructure**, the **estimated monthly AWS cost remains $0.00**.
+
+---

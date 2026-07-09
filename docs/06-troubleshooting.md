@@ -1110,3 +1110,553 @@ terraform/
 Terraform Data Sources rely on successful communication with AWS APIs. Before troubleshooting Terraform itself, always verify that the AWS CLI can authenticate and retrieve the same information. If the AWS CLI works correctly, Terraform is much more likely to function as expected.
 
 ---
+
+# Troubleshooting
+
+This document records common issues encountered during the Terraform project, along with their causes, solutions, and recommended best practices.
+
+---
+
+# Issue: Output References Missing Resource
+
+## Problem
+
+While running:
+
+```bash
+terraform validate
+```
+
+or
+
+```bash
+terraform plan
+```
+
+Terraform displays an error similar to:
+
+```text
+Error: Reference to undeclared resource
+
+A managed resource "aws_vpc" "main" has not been declared in the root module.
+```
+
+or
+
+```text
+Error: Reference to undeclared data resource
+
+A data resource "aws_region" "current" has not been declared.
+```
+
+---
+
+## Cause
+
+The output block references a resource or data source that does not exist.
+
+Example:
+
+```hcl
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
+```
+
+If `aws_vpc.main` has not been defined, Terraform cannot resolve the reference.
+
+The same applies to data sources.
+
+Example:
+
+```hcl
+output "aws_region" {
+  value = data.aws_region.current.name
+}
+```
+
+If `data.aws_region.current` has not been declared in `data.tf`, Terraform reports an error.
+
+---
+
+## Solution
+
+### Step 1: Verify the Referenced Resource or Data Source
+
+Ensure the referenced object exists.
+
+Example:
+
+```hcl
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
+or
+
+```hcl
+data "aws_region" "current" {}
+```
+
+---
+
+### Step 2: Verify the Reference Name
+
+Terraform references must match exactly.
+
+Correct:
+
+```hcl
+aws_vpc.main.id
+```
+
+Incorrect:
+
+```hcl
+aws_vpc.vpc.id
+```
+
+---
+
+### Step 3: Verify the Correct File
+
+Confirm that the resource or data source is defined in the appropriate Terraform file.
+
+Example project structure:
+
+```text
+terraform/
+│
+├── provider.tf
+├── variables.tf
+├── locals.tf
+├── data.tf
+├── outputs.tf
+└── main.tf
+```
+
+---
+
+### Step 4: Validate the Configuration
+
+Run:
+
+```bash
+terraform fmt
+
+terraform validate
+```
+
+Terraform should now successfully resolve the output reference.
+
+---
+
+# Issue: Output Value Is Null
+
+## Problem
+
+Terraform completes successfully, but an output displays:
+
+```text
+null
+```
+
+or
+
+```text
+(known after apply)
+```
+
+---
+
+## Cause
+
+The referenced value is not yet available.
+
+Common reasons include:
+
+* The resource has not been created.
+* The value is generated only during deployment.
+* The referenced object does not exist.
+* The output depends on another resource that has not yet been provisioned.
+
+Example:
+
+```hcl
+output "instance_public_ip" {
+  value = aws_instance.web.public_ip
+}
+```
+
+Before the EC2 instance is created, the public IP is unknown.
+
+---
+
+## Solution
+
+### Step 1: Create the Resource
+
+Run:
+
+```bash
+terraform apply
+```
+
+Terraform provisions the infrastructure and retrieves the output value.
+
+---
+
+### Step 2: Verify the Resource Exists
+
+Check that the referenced resource has been created successfully.
+
+Example:
+
+```bash
+terraform state list
+```
+
+If the resource is missing, verify that it exists in the Terraform configuration.
+
+---
+
+### Step 3: Display the Outputs
+
+Run:
+
+```bash
+terraform output
+```
+
+Terraform displays all available output values.
+
+---
+
+### Step 4: Inspect a Specific Output
+
+Example:
+
+```bash
+terraform output aws_region
+```
+
+or
+
+```bash
+terraform output availability_zones
+```
+
+This helps verify that the expected value is being returned.
+
+---
+
+# Troubleshooting Summary
+
+| Issue                                  | Cause                                                                                            | Solution                                                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| **Output references missing resource** | The referenced resource or data source has not been declared or the reference name is incorrect. | Verify the resource or data source exists and ensure the output references the correct name. |
+| **Output value is null**               | The resource has not been created yet or the value is not available until deployment.            | Run `terraform apply` or verify that the referenced resource exists.                         |
+
+---
+
+# Best Practices
+
+* Always define resources and data sources before referencing them in outputs.
+* Use descriptive output names.
+* Validate the Terraform configuration after creating new outputs.
+* Verify references carefully to avoid typographical errors.
+* Use `terraform output` to confirm output values after deployment.
+* Keep all output definitions in a dedicated `outputs.tf` file.
+
+---
+
+# Verification Commands
+
+```bash
+# Format Terraform configuration
+terraform fmt
+
+# Validate Terraform configuration
+terraform validate
+
+# Preview infrastructure changes
+terraform plan
+
+# Apply infrastructure
+terraform apply
+
+# Display all outputs
+terraform output
+
+# Display a specific output
+terraform output aws_region
+
+# List resources in Terraform state
+terraform state list
+```
+
+---
+
+# Related Files
+
+```text
+terraform/
+│
+├── outputs.tf
+├── data.tf
+├── provider.tf
+├── variables.tf
+├── locals.tf
+├── versions.tf
+└── main.tf
+```
+
+---
+
+## 📌 Note
+
+Outputs depend on valid resources and data sources. If Terraform cannot resolve a referenced object, verify that it has been declared correctly. If an output displays `null` or `(known after apply)`, the required value may not exist until after `terraform apply` completes successfully.
+
+---
+
+# Troubleshooting
+
+This document records common issues encountered during the Terraform project, along with their causes, solutions, and recommended best practices.
+
+---
+
+# Issue: Required Variable Not Set
+
+## Problem
+
+While running:
+
+```bash
+terraform plan
+```
+
+or
+
+```bash
+terraform apply
+```
+
+Terraform displays an error similar to:
+
+```text
+Error: No value for required variable
+
+The root module input variable "project_name" is not set,
+and has no default value.
+```
+
+---
+
+## Cause
+
+The variable is declared in `variables.tf`, but Terraform cannot find a value because:
+
+* `terraform.tfvars` does not exist.
+* The variable is missing from `terraform.tfvars`.
+* No value was supplied using `-var`.
+* No value was supplied using `-var-file`.
+* The variable has no default value.
+
+Example:
+
+```hcl
+variable "project_name" {
+  description = "Name of the project."
+  type        = string
+}
+```
+
+Since there is no `default`, Terraform requires a value.
+
+---
+
+## Solution
+
+### Option 1: Add the Variable to `terraform.tfvars`
+
+```hcl
+project_name = "linkedin"
+
+environment = "dev"
+
+aws_region = "ap-south-1"
+```
+
+---
+
+### Option 2: Pass the Value Using `-var`
+
+```bash
+terraform plan \
+-var="project_name=linkedin"
+```
+
+---
+
+### Option 3: Use a Variable File
+
+```bash
+terraform plan -var-file="dev.tfvars"
+```
+
+This is the preferred approach for multi-environment deployments.
+
+---
+
+# Issue: Wrong Region Deployed
+
+## Problem
+
+Terraform plans or deploys resources in an unexpected AWS Region.
+
+Example:
+
+Expected:
+
+```text
+ap-south-1
+```
+
+Actual:
+
+```text
+us-east-1
+```
+
+---
+
+## Cause
+
+The `aws_region` value in `terraform.tfvars` (or another variable source) is incorrect.
+
+Example:
+
+```hcl
+aws_region = "us-east-1"
+```
+
+The AWS Provider uses this value:
+
+```hcl
+provider "aws" {
+  region = var.aws_region
+}
+```
+
+As a result, Terraform targets the wrong Region.
+
+---
+
+## Solution
+
+### Step 1: Verify `terraform.tfvars`
+
+Open:
+
+```text
+terraform/terraform.tfvars
+```
+
+Ensure the Region is correct.
+
+Example:
+
+```hcl
+aws_region = "ap-south-1"
+```
+
+---
+
+### Step 2: Check the Execution Plan
+
+Run:
+
+```bash
+terraform plan
+```
+
+Confirm the provider is using the expected Region.
+
+---
+
+### Step 3: Verify AWS CLI Configuration
+
+Run:
+
+```bash
+aws configure get region
+```
+
+If you're relying on the AWS CLI configuration, ensure it matches the intended deployment Region.
+
+---
+
+# Troubleshooting Summary
+
+| Issue                         | Cause                                                                          | Solution                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| **Required variable not set** | No value supplied for a required variable.                                     | Add the value to `terraform.tfvars` or provide it using `-var` or `-var-file`. |
+| **Wrong region deployed**     | Incorrect `aws_region` value in `terraform.tfvars` or another variable source. | Verify and update the `aws_region` value before running Terraform.             |
+
+---
+
+# Best Practices
+
+* Store environment-specific values in `.tfvars` files.
+* Remove default values for required production variables.
+* Use separate variable files for `dev`, `stage`, and `prod`.
+* Verify `aws_region` before running `terraform plan`.
+* Validate the configuration after updating variables.
+* Keep sensitive values out of version-controlled `.tfvars` files.
+
+---
+
+# Verification Commands
+
+```bash
+# Format Terraform configuration
+terraform fmt
+
+# Validate Terraform configuration
+terraform validate
+
+# Preview infrastructure changes
+terraform plan
+
+# Deploy using a custom variable file
+terraform plan -var-file="stage.tfvars"
+
+# Display configured AWS Region
+aws configure get region
+```
+
+---
+
+# Related Files
+
+```text
+terraform/
+│
+├── variables.tf
+├── terraform.tfvars
+├── provider.tf
+├── locals.tf
+├── data.tf
+├── outputs.tf
+├── versions.tf
+└── main.tf
+```
+
+---
+
+## 📌 Note
+
+When variables no longer have default values, Terraform expects every required variable to be provided. Using `terraform.tfvars` (or environment-specific files such as `dev.tfvars`, `stage.tfvars`, and `prod.tfvars`) is the recommended enterprise approach because it keeps configuration separate from code and reduces the risk of deployment errors.
+
+---
