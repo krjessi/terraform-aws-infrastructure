@@ -824,3 +824,188 @@ After completing this step, the following lessons were learned:
 These lessons reinforce the importance of writing clean, reusable, and well-organized Terraform code using enterprise best practices.
 
 ---
+
+# Lessons Learned
+
+## Phase 2 – Step 2.5: `data.tf`
+
+This document captures the key concepts and best practices learned while creating the `data.tf` file.
+
+---
+
+## Key Takeaways
+
+### 1. Data Sources Retrieve Existing AWS Information
+
+Terraform **Data Sources** are used to read information that already exists in AWS.
+
+They do **not** create, modify, or delete infrastructure.
+
+Common examples include:
+
+* AWS Account ID
+* AWS Region
+* Availability Zones
+* Existing VPCs
+* Existing Security Groups
+* Existing IAM Roles
+
+Using Data Sources allows Terraform to make informed decisions based on the current AWS environment.
+
+---
+
+### 2. Resources and Data Sources Have Different Purposes
+
+Understanding the difference between a **Resource** and a **Data Source** is fundamental in Terraform.
+
+| Resource                                | Data Source                               |
+| --------------------------------------- | ----------------------------------------- |
+| Creates or manages infrastructure       | Reads existing infrastructure or metadata |
+| Managed by Terraform                    | Read-only                                 |
+| Can create, update, or delete resources | Cannot modify resources                   |
+
+A simple rule to remember:
+
+* **Resources create infrastructure.**
+* **Data Sources read infrastructure.**
+
+---
+
+### 3. Data Sources Make Terraform Configurations Dynamic
+
+Instead of relying on fixed values, Data Sources allow Terraform to retrieve the latest information directly from AWS.
+
+Examples include:
+
+* Current AWS Region
+* Available Availability Zones
+* Current AWS Account ID
+
+This makes the configuration adaptable to different environments without changing the source code.
+
+---
+
+### 4. Hardcoded Values Reduce Portability
+
+Hardcoding values such as:
+
+* AMI IDs
+* Availability Zones
+* AWS Account IDs
+
+can make Terraform configurations difficult to reuse.
+
+Using Data Sources improves portability by allowing Terraform to discover these values automatically.
+
+This approach supports deployments across multiple AWS Regions and accounts.
+
+---
+
+### 5. Data Sources Improve Maintainability
+
+AWS environments change over time.
+
+For example:
+
+* New Availability Zones may become available.
+* AMI IDs are updated regularly.
+* Infrastructure may differ between Regions.
+
+By retrieving this information dynamically, Terraform configurations remain easier to maintain and require fewer manual updates.
+
+---
+
+### 6. Data Sources Are Read-Only
+
+Data Sources never provision infrastructure.
+
+They only query AWS APIs to retrieve existing information.
+
+Infrastructure changes are always performed through **Resources**, not Data Sources.
+
+---
+
+### 7. AWS Authentication Is Required
+
+Terraform must successfully authenticate with AWS before it can retrieve Data Source information.
+
+Valid AWS credentials and appropriate IAM permissions are required for operations such as:
+
+* Reading the current account identity
+* Listing Availability Zones
+* Retrieving Region information
+
+Always verify authentication using:
+
+```bash id="3kg2t9"
+aws sts get-caller-identity
+```
+
+before troubleshooting Terraform.
+
+---
+
+### 8. Data Sources Are Evaluated During Planning and Apply
+
+Data Sources are typically queried during:
+
+* `terraform plan`
+* `terraform apply`
+
+The `terraform validate` command checks only the configuration syntax and does not contact AWS.
+
+Understanding this lifecycle helps explain why some errors appear only during planning or deployment.
+
+---
+
+### 9. Organize Data Sources in a Dedicated File
+
+Keeping Data Sources in a separate `data.tf` file improves project organization.
+
+A typical enterprise Terraform structure includes:
+
+* `versions.tf`
+* `provider.tf`
+* `variables.tf`
+* `locals.tf`
+* `data.tf`
+* `outputs.tf`
+* `main.tf`
+
+Separating responsibilities makes the project easier to understand and maintain.
+
+---
+
+### 10. Follow Enterprise Best Practices
+
+Enterprise Terraform projects should:
+
+* Prefer Data Sources over hardcoded values.
+* Retrieve AWS metadata dynamically.
+* Keep configurations portable across Regions.
+* Separate Resources and Data Sources into dedicated files.
+* Validate the configuration after each change.
+* Grant only the minimum IAM permissions required.
+
+These practices improve scalability, maintainability, and reliability.
+
+---
+
+## Summary
+
+After completing this step, the following lessons were learned:
+
+* Data Sources retrieve existing AWS information.
+* They make Terraform configurations dynamic and portable.
+* Hardcoded values reduce flexibility and maintainability.
+* Resources create infrastructure, while Data Sources read existing information.
+* Dynamic lookups improve portability across AWS Regions and accounts.
+* Data Sources are read-only and never provision infrastructure.
+* AWS authentication and IAM permissions are required to query Data Sources.
+* Data Sources are evaluated during `terraform plan` and `terraform apply`.
+* Organizing Data Sources in `data.tf` improves project structure.
+* Following enterprise best practices results in cleaner, more reusable, and production-ready Terraform configurations.
+
+These lessons establish a solid foundation for using Terraform Data Sources effectively in real-world AWS infrastructure projects.
+
+---

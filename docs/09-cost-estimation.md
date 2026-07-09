@@ -520,3 +520,126 @@ These files define the project foundation and do **not** incur any AWS charges.
 **Phase 2 – Step 2.4 (`locals.tf`)** establishes reusable local values, consistent resource naming, and centralized tagging for the Terraform project. Since **no AWS resources are created**, the **estimated AWS cost remains $0.00**.
 
 ---
+
+# AWS Cost
+
+## Phase 2 – Step 2.5: `data.tf`
+
+### Estimated AWS Cost
+
+| Resource                 | Status      | Estimated Cost |
+| ------------------------ | ----------- | -------------: |
+| AWS Resources            | Not Created |      **$0.00** |
+| **Total Estimated Cost** |             |      **$0.00** |
+
+---
+
+# Resources Created
+
+**None**
+
+This step focuses on configuring Terraform **Data Sources** to retrieve information from AWS. No infrastructure is created, modified, or deleted.
+
+---
+
+# Why the Cost Is $0.00
+
+During **Step 2.5**, you:
+
+* Created the `data.tf` file.
+* Configured AWS Data Sources.
+* Retrieved the current AWS account information.
+* Retrieved the current AWS Region.
+* Retrieved the available Availability Zones.
+* Formatted and validated the Terraform configuration.
+
+These operations are **read-only** and do **not** provision any AWS resources.
+
+---
+
+# Data Sources Are Read-Only
+
+Terraform Data Sources only query existing information from AWS APIs.
+
+Examples include:
+
+* AWS Account ID
+* AWS Region
+* Availability Zones
+* Existing VPCs
+* Existing IAM Roles
+* Existing Security Groups
+
+They **do not**:
+
+* Create resources
+* Modify resources
+* Delete resources
+
+Because no infrastructure is provisioned, there are **no AWS charges** associated with this step.
+
+---
+
+# AWS Resources Provisioned
+
+The following AWS resources have **not** been created:
+
+* Amazon VPC
+* Public Subnets
+* Private Subnets
+* Internet Gateway
+* NAT Gateway
+* Route Tables
+* Security Groups
+* IAM Roles
+* Amazon EC2
+* Application Load Balancer (ALB)
+* Auto Scaling Group (ASG)
+* Amazon RDS (PostgreSQL)
+* Amazon S3 Bucket
+* Amazon DynamoDB Table
+* Amazon CloudWatch Resources
+
+---
+
+# AWS Billing Summary
+
+| AWS Service               | Status      | Estimated Cost |
+| ------------------------- | ----------- | -------------: |
+| Amazon VPC                | Not Created |          $0.00 |
+| Amazon EC2                | Not Created |          $0.00 |
+| Amazon RDS                | Not Created |          $0.00 |
+| Application Load Balancer | Not Created |          $0.00 |
+| Auto Scaling Group        | Not Created |          $0.00 |
+| Amazon S3                 | Not Created |          $0.00 |
+| Amazon DynamoDB           | Not Created |          $0.00 |
+| Amazon CloudWatch         | Not Created |          $0.00 |
+
+---
+
+# Cost Optimization Notes
+
+* Data Sources only query AWS APIs.
+* No compute, storage, networking, or database resources are created.
+* Querying AWS metadata does not incur infrastructure provisioning charges.
+* AWS billing begins only after resources are created using `terraform apply`.
+
+---
+
+# Step Summary
+
+| Item                    | Status            |
+| ----------------------- | ----------------- |
+| AWS Resources Created   | ❌ None            |
+| Data Sources Configured | ✅ Yes             |
+| AWS APIs Queried        | ✅ Yes (Read-Only) |
+| Estimated AWS Cost      | **$0.00**         |
+| Safe to Continue        | ✅ Yes             |
+
+---
+
+## ✅ Conclusion
+
+**Phase 2 – Step 2.5 (`data.tf`)** introduces Terraform Data Sources for retrieving information from AWS. Since Data Sources only perform **read-only API queries** and **do not provision resources**, the **estimated AWS cost remains $0.00**.
+
+---

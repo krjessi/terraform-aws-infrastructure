@@ -834,3 +834,279 @@ terraform/
 Centralizing reusable values in `locals.tf` improves consistency, reduces duplicate code, and makes future updates significantly easier. If a common value changes, you only need to update it in one place instead of modifying every resource.
 
 ---
+
+# Troubleshooting
+
+This document records common issues encountered during the Terraform project, along with their causes, resolutions, and recommended best practices.
+
+---
+
+# Issue: Error Reading AWS Data Source
+
+## Problem
+
+While running:
+
+```bash
+terraform plan
+```
+
+or
+
+```bash
+terraform apply
+```
+
+Terraform displays an error similar to:
+
+```text
+Error: reading AWS data source
+
+Error: failed to query AWS API
+```
+
+or
+
+```text
+Error: No valid credential sources found
+```
+
+or
+
+```text
+AccessDenied
+```
+
+---
+
+## Cause
+
+Terraform cannot authenticate with AWS because the configured credentials are:
+
+* Invalid
+* Missing
+* Expired
+* Incorrectly configured
+* Missing required IAM permissions
+
+Since data sources communicate directly with AWS APIs, authentication must succeed before Terraform can retrieve information.
+
+---
+
+## Solution
+
+### Step 1: Verify AWS Credentials
+
+Run:
+
+```bash
+aws sts get-caller-identity
+```
+
+Expected output:
+
+```json
+{
+  "UserId": "AIDXXXXXXXXXXXXXXX",
+  "Account": "123456789012",
+  "Arn": "arn:aws:iam::123456789012:user/terraform-user"
+}
+```
+
+If this command fails, Terraform will also fail to authenticate.
+
+---
+
+### Step 2: Reconfigure AWS CLI (if necessary)
+
+```bash
+aws configure
+```
+
+Provide:
+
+* AWS Access Key ID
+* AWS Secret Access Key
+* Default Region
+* Output Format
+
+---
+
+### Step 3: Verify IAM Permissions
+
+Ensure the IAM user or IAM role has permission to read AWS resources.
+
+Typical permissions include:
+
+* `sts:GetCallerIdentity`
+* `ec2:DescribeAvailabilityZones`
+* `ec2:DescribeRegions`
+
+---
+
+### Step 4: Retry
+
+Run:
+
+```bash
+terraform plan
+```
+
+Terraform should now successfully retrieve the required data sources.
+
+---
+
+# Issue: No Availability Zones Returned
+
+## Problem
+
+Terraform displays an error similar to:
+
+```text
+No Availability Zones found
+```
+
+or returns an empty list for:
+
+```hcl
+data.aws_availability_zones.available.names
+```
+
+---
+
+## Cause
+
+Common causes include:
+
+* Incorrect AWS Region configured
+* Unsupported AWS Region
+* Insufficient IAM permissions
+* AWS account restrictions
+
+Terraform can only retrieve Availability Zones that are available in the configured Region and accessible to the authenticated account.
+
+---
+
+## Solution
+
+### Step 1: Verify the AWS Region
+
+Check your provider configuration.
+
+Example:
+
+```hcl
+provider "aws" {
+  region = var.aws_region
+}
+```
+
+Confirm that the value of `aws_region` is valid.
+
+Example:
+
+```text
+ap-south-1
+```
+
+---
+
+### Step 2: Verify the Current Region
+
+Run:
+
+```bash
+aws configure get region
+```
+
+Or inspect the Terraform variable value.
+
+---
+
+### Step 3: Verify IAM Permissions
+
+The IAM identity should have permission to execute:
+
+* `ec2:DescribeAvailabilityZones`
+
+Without this permission, Terraform cannot retrieve Availability Zone information.
+
+---
+
+### Step 4: Test with the AWS CLI
+
+Run:
+
+```bash
+aws ec2 describe-availability-zones
+```
+
+If this command succeeds, Terraform should also be able to retrieve the Availability Zones.
+
+---
+
+# Troubleshooting Summary
+
+| Issue                              | Cause                                                 | Solution                                                                                                                                                   |
+| ---------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Error reading AWS data source**  | Invalid, missing, or expired AWS credentials.         | Verify authentication using `aws sts get-caller-identity`, reconfigure the AWS CLI if necessary, and ensure the IAM identity has the required permissions. |
+| **No Availability Zones returned** | Incorrect AWS Region or insufficient IAM permissions. | Verify the configured AWS Region and confirm the IAM identity can call `ec2:DescribeAvailabilityZones`.                                                    |
+
+---
+
+# Best Practices
+
+* Verify AWS authentication before running Terraform commands.
+* Test AWS CLI access using `aws sts get-caller-identity`.
+* Use valid AWS Region codes such as `ap-south-1`.
+* Grant only the minimum IAM permissions required (principle of least privilege).
+* Validate Terraform configuration before planning or applying.
+* Keep AWS CLI and Terraform using the same AWS profile when appropriate.
+
+---
+
+# Verification Commands
+
+```bash
+# Verify AWS authentication
+aws sts get-caller-identity
+
+# Display configured AWS Region
+aws configure get region
+
+# List Availability Zones
+aws ec2 describe-availability-zones
+
+# Format Terraform configuration
+terraform fmt
+
+# Validate Terraform configuration
+terraform validate
+
+# Preview infrastructure changes
+terraform plan
+```
+
+---
+
+# Related Files
+
+```text
+terraform/
+│
+├── data.tf
+├── provider.tf
+├── variables.tf
+├── locals.tf
+├── versions.tf
+├── outputs.tf
+└── main.tf
+```
+
+---
+
+## 📌 Note
+
+Terraform Data Sources rely on successful communication with AWS APIs. Before troubleshooting Terraform itself, always verify that the AWS CLI can authenticate and retrieve the same information. If the AWS CLI works correctly, Terraform is much more likely to function as expected.
+
+---

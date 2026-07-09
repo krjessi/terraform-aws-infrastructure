@@ -1603,3 +1603,319 @@ After completing this section, you should be able to confidently explain:
 These concepts are fundamental to writing clean, reusable, and enterprise-ready Terraform configurations and are frequently covered in DevOps, Cloud, and Infrastructure as Code interviews.
 
 ---
+
+# Interview Questions – Step 2.5: `data.tf`
+
+## Overview
+
+These interview questions cover the concepts learned while creating the **`data.tf`** file.
+
+The answers are written in an interview-friendly format and focus on Terraform Data Sources, AWS integration, and enterprise best practices.
+
+---
+
+# 1. What is a Terraform data source?
+
+## Answer
+
+A **Terraform Data Source** is a read-only object that allows Terraform to retrieve information about existing infrastructure or metadata.
+
+Unlike resources, data sources **do not create or manage infrastructure**. They simply fetch information from a provider.
+
+### Examples
+
+* Current AWS Account ID
+* Current AWS Region
+* Availability Zones
+* Existing VPC
+* Existing IAM Role
+* Latest Amazon Linux AMI
+
+### Example
+
+```hcl
+data "aws_region" "current" {}
+```
+
+This retrieves the AWS Region currently configured in the provider.
+
+### Interview Tip
+
+> "Data sources are used to read existing information from AWS without creating or modifying any resources."
+
+---
+
+# 2. What is the difference between a resource and a data source?
+
+## Answer
+
+A **resource** creates or manages infrastructure, while a **data source** reads information about infrastructure that already exists.
+
+### Comparison
+
+| Resource                                | Data Source                   |
+| --------------------------------------- | ----------------------------- |
+| Creates infrastructure                  | Reads existing infrastructure |
+| Managed by Terraform                    | Read-only                     |
+| Can create, update, or delete resources | Cannot modify resources       |
+| Uses the `resource` block               | Uses the `data` block         |
+
+### Example
+
+**Resource**
+
+```hcl
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
+Creates a new VPC.
+
+**Data Source**
+
+```hcl
+data "aws_availability_zones" "available" {}
+```
+
+Retrieves the available Availability Zones in the configured AWS Region.
+
+### Interview Tip
+
+> "Resources provision infrastructure, while data sources retrieve information about existing infrastructure."
+
+---
+
+# 3. Why use `aws_availability_zones` instead of hardcoding Availability Zones?
+
+## Answer
+
+Availability Zones differ between AWS Regions.
+
+Hardcoding values such as:
+
+```text
+ap-south-1a
+```
+
+makes the configuration less portable.
+
+Instead, Terraform can dynamically retrieve the available Availability Zones.
+
+Example:
+
+```hcl
+data "aws_availability_zones" "available" {}
+```
+
+### Benefits
+
+* Supports multi-region deployments
+* Eliminates hardcoded values
+* Automatically adapts to different AWS Regions
+* Improves maintainability
+
+### Example
+
+```hcl
+availability_zone = data.aws_availability_zones.available.names[0]
+```
+
+Terraform automatically selects the first available Availability Zone.
+
+---
+
+# 4. What information does `aws_caller_identity` provide?
+
+## Answer
+
+The `aws_caller_identity` data source returns information about the AWS identity currently authenticated with Terraform.
+
+### Information Returned
+
+* AWS Account ID
+* User ID
+* Amazon Resource Name (ARN)
+
+### Example
+
+```text
+Account ID: 123456789012
+
+ARN:
+arn:aws:iam::123456789012:user/terraform-user
+```
+
+### Common Use Cases
+
+* Building IAM policies
+* Naming globally unique S3 buckets
+* Creating account-specific resources
+* Verifying the active AWS account
+
+### Interview Tip
+
+> "`aws_caller_identity` is commonly used to retrieve the current AWS account information without hardcoding account IDs."
+
+---
+
+# 5. How is `aws_region` different from `var.aws_region`?
+
+## Answer
+
+Although they appear similar, they serve different purposes.
+
+### `var.aws_region`
+
+* User-defined input variable
+* Configures the AWS Provider
+* Can be overridden
+* Represents the desired deployment Region
+
+Example:
+
+```hcl
+variable "aws_region" {
+  default = "ap-south-1"
+}
+```
+
+### `data.aws_region.current`
+
+* AWS Data Source
+* Retrieves the Region currently being used by the AWS Provider
+* Read-only
+* Reflects the actual provider configuration
+
+Example:
+
+```hcl
+data "aws_region" "current" {}
+```
+
+### Summary
+
+| `var.aws_region`               | `data.aws_region.current`     |
+| ------------------------------ | ----------------------------- |
+| Input variable                 | Data source                   |
+| User configurable              | Read-only                     |
+| Used to configure the provider | Returns the configured Region |
+
+---
+
+# 6. When are data sources evaluated?
+
+## Answer
+
+Data sources are evaluated during Terraform operations that interact with the provider.
+
+Typically, Terraform queries data sources during:
+
+* `terraform plan`
+* `terraform apply`
+
+The `terraform validate` command checks only the syntax of the configuration and does **not** query AWS.
+
+### Workflow
+
+```text
+terraform validate
+        │
+        ▼
+Checks syntax only
+
+terraform plan
+        │
+        ▼
+Queries AWS Data Sources
+
+terraform apply
+        │
+        ▼
+Queries Data Sources
+Creates Infrastructure
+```
+
+### Interview Tip
+
+> "`terraform validate` verifies the configuration, while `terraform plan` and `terraform apply` retrieve values from data sources."
+
+---
+
+# 7. Can Terraform modify a data source?
+
+## Answer
+
+**No.**
+
+Data sources are **read-only**.
+
+Terraform cannot create, update, or delete infrastructure using a data source.
+
+If infrastructure needs to be managed, a **resource** block must be used.
+
+### Example
+
+Data Source
+
+```hcl
+data "aws_region" "current" {}
+```
+
+Only retrieves information.
+
+Resource
+
+```hcl
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
+Creates and manages a VPC.
+
+### Interview Tip
+
+> "Data sources only retrieve information. They never modify infrastructure."
+
+---
+
+# Quick Revision
+
+| Question                                 | Key Point                                                                                                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| What is a Terraform data source?         | A read-only object that retrieves existing infrastructure or metadata.                                     |
+| Resource vs Data Source?                 | Resources create/manage infrastructure; data sources read existing information.                            |
+| Why use `aws_availability_zones`?        | To dynamically retrieve Availability Zones instead of hardcoding them.                                     |
+| What does `aws_caller_identity` provide? | AWS Account ID, User ID, and ARN.                                                                          |
+| `aws_region` vs `var.aws_region`?        | `var.aws_region` is an input variable; `data.aws_region.current` returns the provider's configured Region. |
+| When are data sources evaluated?         | During `terraform plan` and `terraform apply`.                                                             |
+| Can Terraform modify a data source?      | No. Data sources are read-only.                                                                            |
+
+---
+
+# Interview Tips
+
+* Clearly explain the distinction between **resources** and **data sources**.
+* Mention that data sources improve portability by avoiding hardcoded values.
+* Explain that `terraform validate` checks syntax only, while `terraform plan` and `terraform apply` query AWS.
+* Use practical examples such as `aws_caller_identity` and `aws_availability_zones` to demonstrate real-world usage.
+* Emphasize that data sources are read-only and cannot manage infrastructure.
+
+---
+
+# Summary
+
+After completing this section, you should be able to confidently explain:
+
+* What Terraform Data Sources are.
+* The difference between Resources and Data Sources.
+* Why dynamic values are preferred over hardcoded values.
+* The purpose of `aws_caller_identity`.
+* The difference between `data.aws_region.current` and `var.aws_region`.
+* When Terraform evaluates data sources.
+* Why data sources cannot modify infrastructure.
+
+These concepts are fundamental to writing dynamic, portable, and enterprise-ready Terraform configurations and are commonly discussed in DevOps, Cloud, and Infrastructure as Code interviews.
+
+---

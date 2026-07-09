@@ -1818,3 +1818,436 @@ Using locals is an essential enterprise practice that keeps Terraform configurat
 In **Step 2.5**, you'll create **`data.tf`**, where you'll learn how to retrieve information about existing AWS resources using **Terraform Data Sources** without creating new infrastructure.
 
 ---
+
+# 🚀 Phase 2 – Step 2.5: Create `data.tf`
+
+**Duration:** 45–60 Minutes
+
+---
+
+# 🎯 Goal
+
+Learn how to **read existing information from AWS** without creating or modifying any infrastructure.
+
+Terraform can retrieve information such as:
+
+- AWS Account ID
+- AWS Region
+- Availability Zones
+- Latest Amazon Linux AMI
+- Existing VPCs
+- Existing Security Groups
+- Existing IAM Roles
+
+These are called **Data Sources**.
+
+---
+
+# ⭐ Golden Rule
+
+Terraform has two important concepts:
+
+- **Resource** → Creates or manages infrastructure.
+- **Data Source** → Reads existing infrastructure or metadata.
+
+Remember this distinction throughout your Terraform journey.
+
+---
+
+# 📖 Theory
+
+## What is a Data Source?
+
+A **Data Source** allows Terraform to retrieve information that already exists.
+
+Terraform reads information from AWS but **does not create, modify, or delete** anything.
+
+Examples include:
+
+- Current AWS Account ID
+- Current AWS Region
+- Availability Zones
+- Latest Amazon Linux AMI
+- Existing VPC
+- Existing Security Groups
+- Existing IAM Roles
+
+Data sources make Terraform configurations dynamic and portable.
+
+---
+
+# Resource vs Data Source
+
+| Resource | Data Source |
+|----------|-------------|
+| Creates infrastructure | Reads existing infrastructure |
+| Managed by Terraform | Read-only |
+| Can modify AWS resources | Cannot modify AWS resources |
+| Example: `aws_vpc` | Example: `aws_availability_zones` |
+
+---
+
+## Example: Resource
+
+```hcl
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
+This creates a new Amazon VPC.
+
+---
+
+## Example: Data Source
+
+```hcl
+data "aws_availability_zones" "available" {}
+```
+
+This asks AWS:
+
+> "Which Availability Zones are available in the selected AWS Region?"
+
+Nothing is created.
+
+Terraform simply retrieves the information.
+
+---
+
+# Why Do Enterprise Teams Use Data Sources?
+
+Hardcoding values is considered a bad practice.
+
+For example:
+
+```hcl
+ami = "ami-0abcd1234"
+```
+
+Problems with hardcoding:
+
+- AMI IDs change over time.
+- AMIs are Region-specific.
+- Older AMIs may contain security vulnerabilities.
+- Infrastructure becomes difficult to maintain.
+
+Instead, Terraform can dynamically discover the latest AMI or retrieve other AWS metadata.
+
+This results in more flexible and reliable infrastructure.
+
+---
+
+# What We'll Create
+
+In this step, we'll create three commonly used AWS data sources:
+
+| Data Source | Purpose |
+|-------------|---------|
+| `aws_caller_identity` | Retrieves the current AWS account information. |
+| `aws_region` | Retrieves the current AWS Region. |
+| `aws_availability_zones` | Retrieves available Availability Zones. |
+
+> **Note**
+>
+> We'll configure the Amazon Linux AMI data source later when building the EC2 module, where it can be explained in more detail.
+
+---
+
+# Create `data.tf`
+
+Navigate to:
+
+```text
+terraform/
+```
+
+Open or create:
+
+```text
+data.tf
+```
+
+---
+
+# Add the Following Code
+
+```hcl
+#############################################
+# AWS Caller Identity
+#############################################
+
+data "aws_caller_identity" "current" {}
+
+#############################################
+# AWS Region
+#############################################
+
+data "aws_region" "current" {}
+
+#############################################
+# Availability Zones
+#############################################
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+```
+
+---
+
+# Understanding Every Data Source
+
+## 1. AWS Caller Identity
+
+```hcl
+data "aws_caller_identity" "current" {}
+```
+
+This data source retrieves information about the AWS account currently authenticated with Terraform.
+
+### Information Returned
+
+- AWS Account ID
+- User ARN
+- User ID
+
+### Example
+
+```text
+Account ID: 123456789012
+
+ARN:
+arn:aws:iam::123456789012:user/terraform-user
+```
+
+### Common Use Cases
+
+- Building IAM policies
+- Creating globally unique S3 bucket names
+- Naming account-specific resources
+- Verifying the active AWS account
+
+---
+
+## 2. AWS Region
+
+```hcl
+data "aws_region" "current" {}
+```
+
+This retrieves the currently configured AWS Region.
+
+### Example Output
+
+```text
+ap-south-1
+```
+
+Instead of hardcoding:
+
+```text
+Mumbai
+```
+
+Terraform queries AWS directly.
+
+### Benefits
+
+- Supports multi-region deployments
+- Eliminates hardcoded values
+- Improves portability
+
+---
+
+## 3. Availability Zones
+
+```hcl
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+```
+
+This retrieves all available Availability Zones in the selected AWS Region.
+
+### Example Output
+
+```text
+ap-south-1a
+
+ap-south-1b
+
+ap-south-1c
+```
+
+### Future Use Cases
+
+Later in the project, these Availability Zones will be used to create:
+
+- Public Subnets
+- Private Application Subnets
+- Private Database Subnets
+
+This makes the infrastructure portable across different AWS Regions.
+
+---
+
+# How We'll Use These Later
+
+Example:
+
+```hcl
+availability_zone = data.aws_availability_zones.available.names[0]
+```
+
+Terraform automatically selects:
+
+```text
+ap-south-1a
+```
+
+No hardcoding is required.
+
+If the deployment Region changes, Terraform automatically retrieves the appropriate Availability Zones.
+
+---
+
+# Validation
+
+Navigate to the Terraform directory.
+
+```bash
+cd terraform
+```
+
+---
+
+## Format the Configuration
+
+Run:
+
+```bash
+terraform fmt
+```
+
+---
+
+## Validate the Configuration
+
+Run:
+
+```bash
+terraform validate
+```
+
+### Expected Output
+
+```text
+Success! The configuration is valid.
+```
+
+> **Note**
+>
+> `terraform validate` only checks the syntax of the configuration.
+>
+> The data sources are actually queried during:
+>
+> - `terraform plan`
+> - `terraform apply`
+
+---
+
+# Project Structure
+
+After this step, your Terraform directory should look like:
+
+```text
+terraform/
+│
+├── versions.tf
+├── provider.tf
+├── variables.tf
+├── locals.tf
+├── data.tf
+├── outputs.tf
+├── main.tf
+├── modules/
+└── environments/
+```
+
+---
+
+# Documentation
+
+Update:
+
+```text
+docs/terraform-concepts.md
+```
+
+Add a new section.
+
+## Data Sources
+
+Include the following topics:
+
+- What is a Data Source?
+- Resource vs Data Source
+- Benefits of Dynamic Values
+- Why Avoid Hardcoded AMIs?
+- Why Avoid Hardcoded Availability Zones?
+
+---
+
+# Best Practices
+
+- Prefer data sources over hardcoded values.
+- Use data sources to retrieve dynamic AWS information.
+- Avoid storing Region-specific values directly in the code.
+- Use data sources to improve portability across AWS Regions.
+- Keep data source definitions in a dedicated `data.tf` file.
+- Validate the configuration after every change.
+
+---
+
+# Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Authentication failed | Invalid AWS credentials | Verify credentials using `aws sts get-caller-identity`. |
+| No Availability Zones returned | Incorrect or unsupported AWS Region | Verify the configured Region in `provider.tf` or `variables.tf`. |
+| Access denied | Insufficient IAM permissions | Ensure the IAM user or role has permission to query AWS metadata. |
+
+---
+
+# Summary
+
+In this step, you:
+
+- Created the `data.tf` file.
+- Learned the purpose of Terraform Data Sources.
+- Understood the difference between Resources and Data Sources.
+- Retrieved the current AWS Account information.
+- Retrieved the current AWS Region.
+- Retrieved available Availability Zones.
+- Learned why enterprise Terraform projects avoid hardcoded values.
+- Successfully validated the Terraform configuration.
+
+Using Data Sources makes Terraform configurations more dynamic, portable, and maintainable while reducing reliance on hardcoded infrastructure values.
+
+---
+
+# Next Step
+
+In **Step 2.6**, you'll create **`outputs.tf`**, where you'll learn how to display useful information after Terraform operations, such as:
+
+- AWS Account ID
+- AWS Region
+- Availability Zones
+- Resource IDs
+- Public IP Addresses
+- Load Balancer DNS Names
+
+Outputs make Terraform deployments easier to verify and integrate with other modules or automation workflows.
+
+---
