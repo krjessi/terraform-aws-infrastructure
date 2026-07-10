@@ -3462,3 +3462,430 @@ In **Phase 3**, you'll begin creating reusable Terraform modules, starting with 
 From this point onward, the project transitions from building the Terraform foundation to provisioning real AWS infrastructure using enterprise-grade modular design.
 
 ---
+
+# 🚀 Phase 3.1 – VPC Design & Architecture
+
+**Duration:** 2–3 Hours
+
+---
+
+# 🎯 Goal
+
+Design a **production-ready AWS network architecture** for the **LinkedIn Clone** application before implementing it with Terraform.
+
+In enterprise environments, infrastructure design comes **before** Infrastructure as Code (IaC). A well-designed architecture results in secure, scalable, and highly available deployments.
+
+---
+
+# 📖 Learning Objectives
+
+By the end of this step, you will understand:
+
+- What is a Virtual Private Cloud (VPC)?
+- Why create a custom VPC?
+- CIDR planning
+- Public vs Private Subnets
+- High Availability (HA)
+- Internet Gateway
+- NAT Gateway (Design Only)
+- Route Tables
+- Security considerations
+- Enterprise networking best practices
+
+---
+
+# Business Requirement
+
+Imagine your manager gives you the following requirement:
+
+> **"Deploy our LinkedIn Clone application on AWS with high availability, security, scalability, and a production-ready architecture."**
+
+Before opening VS Code or writing Terraform code, the first step is to design the architecture.
+
+Infrastructure should always be planned before implementation.
+
+---
+
+# Application Architecture
+
+Our application consists of three logical layers.
+
+```text
+Internet Users
+        │
+        ▼
+Application Load Balancer
+        │
+        ▼
+Spring Boot Application
+        │
+        ▼
+PostgreSQL Database
+```
+
+Now let's map this application architecture to AWS networking components.
+
+---
+
+# AWS Network Architecture
+
+```text
+                                    Internet
+                                        │
+                                Internet Gateway
+                                        │
+                      ┌─────────────────┴─────────────────┐
+                      │                                   │
+               Public Subnet A                    Public Subnet B
+                      │                                   │
+                      └────────── Application Load Balancer ──────────┘
+                                        │
+                  ┌─────────────────────┴─────────────────────┐
+                  │                                           │
+           Private App Subnet A                      Private App Subnet B
+                  │                                           │
+              EC2 Instance                              EC2 Instance
+                  │                                           │
+                  └─────────────────────┬─────────────────────┘
+                                        │
+                  ┌─────────────────────┴─────────────────────┐
+                  │                                           │
+           Private DB Subnet A                      Private DB Subnet B
+                  │                                           │
+                PostgreSQL RDS (Multi-AZ Ready)
+```
+
+This architecture follows AWS Well-Architected Framework recommendations for production deployments.
+
+---
+
+# Why This Design?
+
+Every architectural decision should have a clear justification.
+
+Interviewers often evaluate your reasoning more than your Terraform syntax.
+
+---
+
+# 1. Custom VPC
+
+### CIDR Block
+
+```text
+10.0.0.0/16
+```
+
+### Why?
+
+A custom VPC provides complete control over:
+
+- IP Addressing
+- Subnet Design
+- Route Tables
+- Security
+- Internet Connectivity
+- Network Isolation
+
+Using a custom VPC also avoids relying on the AWS default VPC, which is generally not recommended for production workloads.
+
+---
+
+### Interview Answer
+
+> "A Virtual Private Cloud (VPC) is a logically isolated virtual network within AWS. It allows us to control IP addressing, routing, network security, and connectivity for our applications."
+
+---
+
+# 2. Public Subnets
+
+### Purpose
+
+Public Subnets host resources that must communicate directly with the Internet.
+
+Resources include:
+
+- Application Load Balancer
+- NAT Gateway (introduced later)
+
+Traffic flow:
+
+```text
+Internet
+     │
+     ▼
+Internet Gateway
+     │
+     ▼
+Public Subnets
+```
+
+Public Subnets have routes that allow internet connectivity through the Internet Gateway.
+
+---
+
+# 3. Private Application Subnets
+
+### Purpose
+
+Private Application Subnets host the application layer.
+
+Resources include:
+
+- Amazon EC2
+- Auto Scaling Group
+
+---
+
+### Question
+
+Should users access EC2 instances directly?
+
+**No.**
+
+Users should only access the:
+
+```text
+Application Load Balancer
+```
+
+The ALB distributes traffic to private EC2 instances.
+
+---
+
+### Benefits
+
+- Better security
+- No public EC2 IP addresses
+- Centralized traffic management
+- Simplified Auto Scaling
+- Reduced attack surface
+
+---
+
+# 4. Private Database Subnets
+
+### Purpose
+
+Private Database Subnets host the PostgreSQL database.
+
+Resources include:
+
+- Amazon RDS PostgreSQL
+
+---
+
+### Database Traffic Flow
+
+Correct flow:
+
+```text
+Internet
+     │
+     ▼
+Application Load Balancer
+     │
+     ▼
+EC2
+     │
+     ▼
+Amazon RDS
+```
+
+Incorrect flow:
+
+```text
+Internet
+     │
+     ▼
+Amazon RDS
+```
+
+Databases should never be directly exposed to the public Internet.
+
+---
+
+# CIDR Planning
+
+Proper IP address planning is a fundamental networking skill.
+
+The following CIDR blocks will be used.
+
+| Resource | CIDR |
+|----------|------|
+| VPC | `10.0.0.0/16` |
+| Public Subnet A | `10.0.1.0/24` |
+| Public Subnet B | `10.0.2.0/24` |
+| Private App Subnet A | `10.0.11.0/24` |
+| Private App Subnet B | `10.0.12.0/24` |
+| Private DB Subnet A | `10.0.21.0/24` |
+| Private DB Subnet B | `10.0.22.0/24` |
+
+---
+
+# Why Use `/16` for the VPC?
+
+A `/16` CIDR block provides:
+
+- 65,536 IP addresses
+- Flexibility for future growth
+- Support for multiple subnet tiers
+- Enterprise scalability
+
+It is a common choice for production environments.
+
+---
+
+# Why Use `/24` for Each Subnet?
+
+Each `/24` subnet provides:
+
+- 256 IP addresses
+- Clear separation of network tiers
+- Easy subnet management
+- A widely adopted production design pattern
+
+---
+
+# Availability Zones
+
+The infrastructure will span two Availability Zones.
+
+| Availability Zone | Resources |
+|-------------------|-----------|
+| `ap-south-1a` | Public, Application, Database Subnets |
+| `ap-south-1b` | Public, Application, Database Subnets |
+
+---
+
+# Why Only Two Availability Zones?
+
+Using two Availability Zones provides:
+
+- High Availability
+- Fault Tolerance
+- Multi-AZ deployment support
+- Lower cost than spanning three Availability Zones
+- Sufficient redundancy for this project
+
+---
+
+# Network Flow
+
+Every user request follows this path.
+
+```text
+Client
+   │
+   ▼
+DNS
+   │
+   ▼
+Application Load Balancer
+   │
+   ▼
+EC2 Auto Scaling Group
+   │
+   ▼
+PostgreSQL RDS
+```
+
+This layered architecture improves scalability and security.
+
+---
+
+# Security Design
+
+The infrastructure follows the principle of **least exposure**.
+
+| Layer | Publicly Accessible |
+|-------|:-------------------:|
+| Application Load Balancer | ✅ Yes |
+| EC2 Instances | ❌ No |
+| PostgreSQL Database | ❌ No |
+
+Only the Application Load Balancer accepts traffic from the Internet.
+
+Application servers and databases remain private.
+
+---
+
+# Future Networking Components
+
+The following networking resources will be implemented in upcoming steps.
+
+```text
+Internet Gateway
+        │
+        ▼
+NAT Gateway
+        │
+        ▼
+Route Tables
+        │
+        ▼
+Security Groups
+        │
+        ▼
+IAM Roles
+        │
+        ▼
+CloudWatch
+```
+
+The design is completed first, followed by implementation.
+
+---
+
+# VPC Module Structure
+
+The VPC will be implemented as a reusable Terraform module.
+
+```text
+terraform/
+└── modules/
+    └── vpc/
+        ├── main.tf
+        ├── variables.tf
+        ├── outputs.tf
+        └── README.md
+```
+
+This modular structure promotes:
+
+- Code reuse
+- Easier maintenance
+- Independent testing
+- Cleaner project organization
+
+Future modules such as **ALB**, **EC2**, **RDS**, and **IAM** will follow the same pattern.
+
+---
+
+# Best Practices
+
+- Design the architecture before writing Terraform.
+- Use a custom VPC instead of the default VPC.
+- Keep databases in private subnets.
+- Place internet-facing resources only in public subnets.
+- Deploy across multiple Availability Zones.
+- Follow a layered network architecture.
+- Build reusable Terraform modules.
+- Plan CIDR ranges carefully to support future expansion.
+
+---
+
+# Phase Summary
+
+After completing **Phase 3.1 – VPC Design & Architecture**, you will have:
+
+- Designed a production-ready AWS network.
+- Understood VPC architecture and subnet design.
+- Planned CIDR allocation for the entire infrastructure.
+- Learned the purpose of public and private subnets.
+- Designed a Multi-AZ architecture for High Availability.
+- Applied security-first networking principles.
+- Prepared the project for implementing the reusable Terraform VPC module.
+
+This architectural foundation will guide every networking component created in the upcoming Terraform implementation phases.
+
+---

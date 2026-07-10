@@ -1009,3 +1009,114 @@ The following AWS resources have **not** been created:
 **Phase 2 – Step 2.8 (`main.tf`)** completes the Terraform project foundation by establishing the Root Module and preparing the project for modular infrastructure. Since **no AWS resources are created**, the **estimated monthly AWS cost remains $0.00**.
 
 ---
+
+# AWS Cost
+
+## Phase 3.1 – VPC Design & Architecture
+
+### Estimated AWS Cost
+
+| Resource                         | Status      | Estimated Monthly Cost |
+| -------------------------------- | ----------- | ---------------------: |
+| AWS Resources                    | Not Created |              **$0.00** |
+| **Total Estimated Monthly Cost** |             |              **$0.00** |
+
+---
+
+# Resources Created
+
+**None**
+
+This step focuses entirely on **planning and designing** the AWS network architecture.
+
+No AWS resources are provisioned, modified, or deleted during this phase.
+
+---
+
+# Why the Cost Is $0.00
+
+During **Phase 3.1**, you:
+
+* Designed the AWS network architecture.
+* Planned the VPC CIDR block.
+* Planned Public and Private Subnets.
+* Designed the High Availability strategy.
+* Planned the security architecture.
+* Defined the module structure.
+* Updated project documentation.
+* Prepared the infrastructure for Terraform implementation.
+
+These activities involve documentation and architectural planning only.
+
+---
+
+# No AWS Infrastructure Provisioned
+
+At this stage, **Terraform has not created any AWS resources**.
+
+The following services are still in the design phase:
+
+* Amazon VPC
+* Public Subnets
+* Private Application Subnets
+* Private Database Subnets
+* Internet Gateway
+* NAT Gateway
+* Route Tables
+* Security Groups
+* IAM Roles
+* Application Load Balancer
+* Auto Scaling Group
+* Amazon EC2
+* Amazon RDS
+* Amazon CloudWatch
+
+Since no infrastructure exists yet, **no AWS charges are incurred**.
+
+---
+
+# AWS Billing Summary
+
+| AWS Service               | Status      | Estimated Monthly Cost |
+| ------------------------- | ----------- | ---------------------: |
+| Amazon VPC                | Not Created |                  $0.00 |
+| Public & Private Subnets  | Not Created |                  $0.00 |
+| Internet Gateway          | Not Created |                  $0.00 |
+| NAT Gateway               | Not Created |                  $0.00 |
+| Route Tables              | Not Created |                  $0.00 |
+| Security Groups           | Not Created |                  $0.00 |
+| Amazon EC2                | Not Created |                  $0.00 |
+| Application Load Balancer | Not Created |                  $0.00 |
+| Auto Scaling Group        | Not Created |                  $0.00 |
+| Amazon RDS                | Not Created |                  $0.00 |
+| Amazon CloudWatch         | Not Created |                  $0.00 |
+
+---
+
+# Cost Optimization Notes
+
+* Architecture design and documentation are free.
+* Planning CIDR blocks, subnet layouts, and networking strategies does not generate AWS charges.
+* AWS billing begins only after infrastructure is provisioned using `terraform apply`.
+* Designing before implementation helps prevent costly architecture changes later.
+
+---
+
+# Step Summary
+
+| Item                       | Status    |
+| -------------------------- | --------- |
+| Architecture Designed      | ✅ Yes     |
+| Documentation Updated      | ✅ Yes     |
+| Terraform Code Written     | ❌ No      |
+| AWS Resources Created      | ❌ None    |
+| Infrastructure Provisioned | ❌ No      |
+| Estimated Monthly AWS Cost | **$0.00** |
+
+---
+
+## ✅ Conclusion
+
+**Phase 3.1 – VPC Design & Architecture** is a planning and design phase. No AWS resources are created during this step, so the **estimated monthly AWS cost remains $0.00**. This design provides the architectural foundation for implementing a secure, scalable, and production-ready AWS network in the following Terraform phases.
+
+---

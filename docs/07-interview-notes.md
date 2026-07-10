@@ -3001,3 +3001,304 @@ After completing this section, you should be able to confidently explain:
 These concepts are fundamental to enterprise Terraform development and are frequently discussed in DevOps, Cloud, and Infrastructure as Code interviews.
 
 ---
+
+# Interview Questions – Phase 3.1: VPC Design & Architecture
+
+## Overview
+
+These interview questions cover the networking concepts learned during **Phase 3.1 – VPC Design & Architecture**.
+
+The answers are written in an interview-friendly format and focus on AWS networking, security, high availability, and production architecture.
+
+---
+
+# 1. What is a VPC?
+
+## Answer
+
+A **Virtual Private Cloud (VPC)** is a logically isolated virtual network within AWS where you can launch and manage AWS resources.
+
+A VPC gives you complete control over:
+
+* IP address ranges (CIDR blocks)
+* Subnets
+* Route Tables
+* Internet connectivity
+* Network security
+* Communication between resources
+
+It acts as the networking foundation for your AWS infrastructure.
+
+### Interview Tip
+
+> "A VPC is a logically isolated network in AWS that allows us to control networking, routing, and security for our cloud resources."
+
+---
+
+# 2. Why not use the Default VPC?
+
+## Answer
+
+Although AWS automatically provides a Default VPC, it is generally intended for learning and quick experimentation rather than production workloads.
+
+A **custom VPC** offers much greater flexibility and control.
+
+### Benefits of a Custom VPC
+
+* Custom CIDR planning
+* Public and Private Subnet separation
+* Better security
+* Controlled routing
+* Better scalability
+* Cleaner architecture
+* Compliance with enterprise standards
+
+### Interview Tip
+
+> "In production environments, I prefer a custom VPC because it provides complete control over network design, security, and scalability."
+
+---
+
+# 3. Why choose `10.0.0.0/16`?
+
+## Answer
+
+The VPC uses the CIDR block:
+
+```text
+10.0.0.0/16
+```
+
+A `/16` network provides approximately **65,536 IP addresses**, making it suitable for future expansion.
+
+This allows us to:
+
+* Create multiple subnet tiers
+* Support additional Availability Zones
+* Add future services without redesigning the network
+
+### Interview Tip
+
+> "A `/16` CIDR block provides enough address space for future growth while keeping the network easy to manage."
+
+---
+
+# 4. Why use Public and Private Subnets?
+
+## Answer
+
+Separating resources into Public and Private Subnets improves both security and architecture.
+
+### Public Subnets
+
+Host internet-facing resources such as:
+
+* Application Load Balancer
+* NAT Gateway
+
+These resources require internet connectivity.
+
+### Private Subnets
+
+Host internal resources such as:
+
+* EC2 Instances
+* Amazon RDS
+
+These resources should not be directly accessible from the internet.
+
+### Benefits
+
+* Reduced attack surface
+* Better security
+* Layered architecture
+* Easier compliance
+* Improved scalability
+
+### Interview Tip
+
+> "Only internet-facing components should be placed in Public Subnets, while application servers and databases should remain in Private Subnets."
+
+---
+
+# 5. Why keep EC2 Instances private?
+
+## Answer
+
+Application servers should not receive traffic directly from users.
+
+Instead, all client requests should first reach the Application Load Balancer.
+
+Traffic flow:
+
+```text
+Internet
+     │
+     ▼
+Application Load Balancer
+     │
+     ▼
+EC2 Instances
+```
+
+### Benefits
+
+* No public IP addresses
+* Reduced attack surface
+* Centralized traffic management
+* Easier Auto Scaling
+* Better security
+
+### Interview Tip
+
+> "Keeping EC2 instances private ensures that users can only access the application through the Application Load Balancer."
+
+---
+
+# 6. Why keep Amazon RDS private?
+
+## Answer
+
+The database stores sensitive application data and should never be directly exposed to the internet.
+
+Correct traffic flow:
+
+```text
+Internet
+     │
+     ▼
+Application Load Balancer
+     │
+     ▼
+EC2
+     │
+     ▼
+Amazon RDS
+```
+
+Incorrect design:
+
+```text
+Internet
+     │
+     ▼
+Amazon RDS
+```
+
+### Benefits
+
+* Improved security
+* Data protection
+* Reduced attack surface
+* Better compliance
+* Controlled access using Security Groups
+
+### Interview Tip
+
+> "Only the application servers should communicate with the database. End users should never connect directly to Amazon RDS."
+
+---
+
+# 7. Why deploy across two Availability Zones?
+
+## Answer
+
+Deploying resources across multiple Availability Zones improves High Availability and Fault Tolerance.
+
+If one Availability Zone becomes unavailable:
+
+* The Application Load Balancer continues routing traffic.
+* EC2 instances in the remaining Availability Zone continue serving requests.
+* The application remains available.
+
+### Benefits
+
+* High Availability
+* Fault Tolerance
+* Reduced downtime
+* Better resilience
+* Support for Multi-AZ database deployments
+
+### Interview Tip
+
+> "Using two Availability Zones protects the application from a single Availability Zone failure while maintaining reasonable cost."
+
+---
+
+# 8. How does the Application Load Balancer improve availability?
+
+## Answer
+
+The **Application Load Balancer (ALB)** distributes incoming traffic across multiple healthy EC2 instances located in different Availability Zones.
+
+Example:
+
+```text
+                Internet
+                     │
+                     ▼
+       Application Load Balancer
+              │             │
+              ▼             ▼
+      EC2 Instance A   EC2 Instance B
+```
+
+If one instance becomes unhealthy:
+
+* The ALB automatically stops sending traffic to it.
+* Requests are routed only to healthy instances.
+
+### Benefits
+
+* High Availability
+* Fault Tolerance
+* Automatic Health Checks
+* Better Performance
+* Horizontal Scalability
+
+### Interview Tip
+
+> "The ALB continuously monitors target health and automatically routes traffic only to healthy EC2 instances, improving application availability."
+
+---
+
+# Quick Revision
+
+| Question                                  | Key Point                                                                           |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| What is a VPC?                            | A logically isolated virtual network in AWS.                                        |
+| Why not use the Default VPC?              | A custom VPC provides greater control, security, and scalability.                   |
+| Why choose `10.0.0.0/16`?                 | It provides approximately 65,536 IP addresses for future growth.                    |
+| Why use Public and Private Subnets?       | To separate internet-facing resources from internal resources.                      |
+| Why keep EC2 private?                     | To ensure all traffic passes through the Application Load Balancer.                 |
+| Why keep RDS private?                     | To protect the database from direct internet access.                                |
+| Why deploy across two Availability Zones? | To improve High Availability and Fault Tolerance.                                   |
+| How does the ALB improve availability?    | It distributes traffic across healthy EC2 instances in multiple Availability Zones. |
+
+---
+
+# Interview Tips
+
+* Explain the reasoning behind every networking decision rather than simply naming AWS services.
+* Emphasize **security**, **high availability**, and **scalability** in your answers.
+* Use traffic-flow diagrams when explaining Public and Private Subnets.
+* Mention that production environments typically use a custom VPC instead of the Default VPC.
+* Relate each architectural decision to real-world business requirements such as uptime, security, and maintainability.
+
+---
+
+# Summary
+
+After completing this section, you should be able to confidently explain:
+
+* What a VPC is and why it is the foundation of AWS networking.
+* The advantages of using a custom VPC over the Default VPC.
+* Why `10.0.0.0/16` is a common CIDR choice.
+* The purpose of Public and Private Subnets.
+* Why EC2 instances and Amazon RDS should remain private.
+* The benefits of deploying across multiple Availability Zones.
+* How an Application Load Balancer improves High Availability and fault tolerance.
+
+These networking concepts are fundamental to AWS Solution Architect, DevOps Engineer, Cloud Engineer, and Site Reliability Engineer interviews.
+
+---
