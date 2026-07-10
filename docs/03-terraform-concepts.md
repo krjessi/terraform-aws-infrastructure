@@ -320,16 +320,6 @@ terraform/
 
 ---
 
-# Documentation
-
-Update the following documentation file.
-
-```text
-docs/terraform-concepts.md
-```
-
-Add the following topics.
-
 ## Topics Covered
 
 - What is `versions.tf`?
@@ -348,49 +338,6 @@ Add the following topics.
 - Run `terraform fmt` before committing code.
 - Run `terraform validate` after every configuration change.
 - Commit the generated `.terraform.lock.hcl` file to Git for consistent provider versions across all environments.
-
----
-
-# Common Issues
-
-| Issue | Resolution |
-|-------|------------|
-| `terraform: command not found` | Verify Terraform is installed and available in your system `PATH`. |
-| `Unsupported Terraform version` | Install a Terraform version that satisfies the `required_version` constraint. |
-| `Missing required provider` | Run `terraform init` to download the required providers. |
-| `Failed to query provider packages` | Check your internet connection and verify access to the Terraform Registry. |
-
----
-
-# Interview Questions
-
-### 1. Is `versions.tf` a mandatory filename?
-
-No. Terraform reads all `.tf` files regardless of their names. Using `versions.tf` is an enterprise convention that improves readability.
-
----
-
-### 2. Why do we use version constraints?
-
-Version constraints ensure consistent behavior across environments and prevent compatibility issues caused by different Terraform or provider versions.
-
----
-
-### 3. What does the `terraform {}` block do?
-
-It configures Terraform itself by defining version requirements, providers, backend configuration, and other settings.
-
----
-
-### 4. What is a provider in Terraform?
-
-A provider is a plugin that enables Terraform to interact with external platforms such as AWS, Azure, Kubernetes, Docker, and GitHub.
-
----
-
-### 5. Why do we pin provider versions?
-
-Pinning provider versions prevents unexpected breaking changes caused by automatic upgrades while still allowing tested patch releases.
 
 ---
 
@@ -779,16 +726,6 @@ They will disappear after the next steps.
 
 ---
 
-# Documentation
-
-Update the following documentation file:
-
-```text
-docs/terraform-concepts.md
-```
-
-Add the following topics:
-
 ## Topics Covered
 
 - AWS Provider
@@ -819,21 +756,6 @@ Add the following topics:
 | `Reference to undeclared local value` | `common_tags` has not been defined yet. | Create `locals.tf` in a later step. |
 | Provider authentication failed | AWS CLI credentials are missing or invalid. | Verify credentials using `aws sts get-caller-identity`. |
 | Invalid AWS region | Incorrect region name specified. | Use a valid AWS region code such as `ap-south-1`. |
-
----
-
-# Interview Questions
-
-1. What is a Terraform Provider?
-2. Why does Terraform require a Provider?
-3. Why should Provider configuration be separated from resources?
-4. Why shouldn't AWS Regions be hardcoded?
-5. What are Default Tags?
-6. Why are Tags important in AWS?
-7. What happens if `var.aws_region` doesn't exist?
-8. What happens if `local.common_tags` doesn't exist?
-9. Can a Terraform project use multiple Providers?
-10. What are some examples of Terraform Providers?
 
 ---
 
@@ -1262,16 +1184,6 @@ This is expected because `locals.tf` has not yet been created.
 The configuration will be fully valid after completing the next step.
 
 ---
-
-# Documentation
-
-Update the following file.
-
-```text
-docs/terraform-concepts.md
-```
-
-Add the following topics.
 
 ## Topics Covered
 
@@ -1754,16 +1666,6 @@ terraform/
 
 ---
 
-# Documentation
-
-Update:
-
-```text
-docs/terraform-concepts.md
-```
-
-Add the following topics.
-
 ## Topics Covered
 
 - Local Values
@@ -2176,16 +2078,6 @@ terraform/
 ```
 
 ---
-
-# Documentation
-
-Update:
-
-```text
-docs/terraform-concepts.md
-```
-
-Add a new section.
 
 ## Data Sources
 
@@ -2611,16 +2503,6 @@ terraform/
 ```
 
 ---
-
-# Documentation
-
-Update:
-
-```text
-docs/terraform-concepts.md
-```
-
-Add a new section.
 
 ## Outputs
 
@@ -3072,16 +2954,6 @@ terraform/
 
 ---
 
-# Documentation
-
-Update:
-
-```text
-docs/terraform-concepts.md
-```
-
-Add a new section.
-
 ## `terraform.tfvars`
 
 Include the following topics:
@@ -3524,16 +3396,6 @@ terraform/
 ```
 
 ---
-
-# Documentation
-
-Update:
-
-```text
-docs/terraform-concepts.md
-```
-
-Add a new section.
 
 ## Root Module
 
