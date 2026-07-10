@@ -23,23 +23,23 @@ A clean directory structure improves readability and makes collaboration easier.
 
 Example:
 
-terraform-aws-infrastructure/
-│
-├── architecture/
-├── docs/
-├── images/
-├── terraform/
-│   ├── backend.tf
-│   ├── provider.tf
-│   ├── versions.tf
-│   ├── variables.tf
-│   ├── locals.tf
-│   ├── data.tf
-│   ├── outputs.tf
-│   ├── main.tf
-│   ├── modules/
-│   └── environments/
-└── README.md
+- terraform-aws-infrastructure/
+- │
+- ├── architecture/
+- ├── docs/
+- ├── images/
+- ├── terraform/
+- │   ├── backend.tf
+- │   ├── provider.tf
+- │   ├── versions.tf
+- │   ├── variables.tf
+- │   ├── locals.tf
+- │   ├── data.tf
+- │   ├── outputs.tf
+- │   ├── main.tf
+- │   ├── modules/
+- │   └── environments/
+- └── README.md
 
 Organizing files from the beginning makes the project scalable and easier to maintain.
 
