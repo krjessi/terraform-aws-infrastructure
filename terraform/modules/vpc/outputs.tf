@@ -43,3 +43,12 @@ output "private_db_subnet_ids" {
   description = "IDs of private database subnets."
   value       = aws_subnet.private_db[*].id
 }
+
+#############################################
+# Internet Gateway
+#############################################
+
+output "internet_gateway_id" {
+  description = "ID of the Internet Gateway."
+  value       = aws_internet_gateway.main.id
+}
