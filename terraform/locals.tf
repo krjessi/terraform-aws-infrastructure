@@ -17,9 +17,15 @@ locals {
   common_tags = {
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "Terraform"
-    Owner       = "Mukesh Kumar"
-    Repository  = "terraform-aws-infrastructure"
+
+    ManagedBy = "Terraform"
+    Owner     = "Mukesh Kumar"
+
+    Repository = "terraform-aws-infrastructure"
+
+    CreatedBy = "Terraform"
+
+    Terraform = "true"
   }
 
 }

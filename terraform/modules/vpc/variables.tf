@@ -1,36 +1,15 @@
 #############################################
-# Project Variables
+# VPC Variables
 #############################################
 
 variable "project_name" {
-  description = "Name of the project."
+  description = "Project name."
   type        = string
-  default     = "linkedin-clone"
 }
 
 variable "environment" {
   description = "Deployment environment."
   type        = string
-  default     = "dev"
-
-  validation {
-    condition = contains(
-      ["dev", "stage", "prod"],
-      var.environment
-    )
-
-    error_message = "Environment must be one of: dev, stage, or prod."
-  }
-}
-
-#############################################
-# AWS Variables
-#############################################
-
-variable "aws_region" {
-  description = "AWS region where resources will be deployed."
-  type        = string
-  default     = "ap-south-1"
 }
 
 #############################################
@@ -40,6 +19,11 @@ variable "aws_region" {
 variable "vpc_cidr" {
   description = "CIDR block for the VPC."
   type        = string
+}
+
+variable "common_tags" {
+  description = "Common tags applied to all resources."
+  type        = map(string)
 }
 
 #############################################

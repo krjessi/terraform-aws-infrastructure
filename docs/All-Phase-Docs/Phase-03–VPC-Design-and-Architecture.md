@@ -244,6 +244,11 @@ terraform/
         ├── main.tf
         ├── variables.tf
         ├── outputs.tf
+        ├── vpc.tf
+        ├── subnets.tf
+        ├── internet-gateway.tf
+        ├── route-tables.tf
+        ├── routes.tf
         └── README.md
 ```
 
@@ -258,13 +263,14 @@ Each future module—such as ALB, EC2, IAM, and RDS—will follow the same struc
 | **3.1** | VPC Design & Architecture |
 | **3.2** | Create VPC Module |
 | **3.3** | Public Subnets |
-| **3.4** | Private Application Subnets |
-| **3.5** | Private Database Subnets |
-| **3.6** | Internet Gateway |
-| **3.7** | Route Tables |
-| **3.8** | Route Table Associations |
-| **3.9** | Module Outputs |
-| **3.10** | Documentation, Interview Questions & Git Commit |
+|         | Private Application Subnets |
+|         | Private Database Subnets |
+| **3.4** | Internet Gateway |
+| **3.5** | Route Tables |
+| **3.6** | Route Table Associations |
+| **3.7** | Module Outputs |
+| **3.8** | Documentation, Interview Questions & Git Commit |
+| **3.9** | Apply |
 
 The NAT Gateway will be introduced after the VPC foundation is complete.
 

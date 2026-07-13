@@ -24,3 +24,17 @@ output "availability_zones" {
   description = "Available Availability Zones in the selected AWS region."
   value       = data.aws_availability_zones.available.names
 }
+
+#############################################
+# VPC Outputs
+#############################################
+
+output "vpc_id" {
+  description = "ID of the created VPC."
+  value       = module.vpc.vpc_id
+}
+
+output "vpc_cidr" {
+  description = "CIDR block of the created VPC."
+  value       = module.vpc.vpc_cidr
+}
