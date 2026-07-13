@@ -52,3 +52,30 @@ output "internet_gateway_id" {
   description = "ID of the Internet Gateway."
   value       = aws_internet_gateway.main.id
 }
+
+#############################################
+# Public Route Table
+#############################################
+
+output "public_route_table_id" {
+  description = "Public Route Table ID."
+  value       = aws_route_table.public.id
+}
+
+#############################################
+# Private Route Table
+#############################################
+
+output "private_app_route_table_id" {
+  description = "Private Application Route Table ID."
+  value       = aws_route_table.private_app.id
+}
+
+#############################################
+# Private Database Route Table
+#############################################
+
+output "private_db_route_table_id" {
+  description = "Private Database Route Table ID."
+  value       = aws_route_table.private_db.id
+}
