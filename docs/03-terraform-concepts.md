@@ -3889,3 +3889,2288 @@ After completing **Phase 3.1 – VPC Design & Architecture**, you will have:
 This architectural foundation will guide every networking component created in the upcoming Terraform implementation phases.
 
 ---
+
+# 🚀 Phase 3.2 – Build the VPC Module
+
+**Duration:** 2–4 Hours
+
+---
+
+# 🎯 Goal
+
+Create a reusable **Terraform VPC Module** that provisions:
+
+- ✅ Custom Amazon VPC
+- ✅ DNS Support
+- ✅ DNS Hostnames
+- ✅ Enterprise Resource Tags
+- ✅ Module Outputs
+
+> **Note:**  
+> In this step, we will **only create the VPC**. Public Subnets, Private Subnets, Internet Gateway, NAT Gateway, and Route Tables will be implemented in the upcoming steps to understand each networking component individually.
+
+---
+
+# 📖 Learning Objectives
+
+By the end of this step, you will understand:
+
+- Terraform Modules
+- Root Module vs Child Module
+- Module Inputs
+- Module Outputs
+- Amazon VPC Fundamentals
+- AWS DNS Configuration
+- Enterprise Tagging Strategy
+- Terraform Module Best Practices
+
+---
+
+# What Is a Terraform Module?
+
+A **Terraform Module** is a reusable collection of Terraform configuration files.
+
+Instead of writing infrastructure repeatedly, we package related resources into modules.
+
+Example:
+
+```text
+VPC Module
+
+↓
+
+Reusable
+
+↓
+
+LinkedIn Project
+
+↓
+
+Airbnb Project
+
+↓
+
+Netflix Project
+```
+
+The module remains unchanged.
+
+Only the input values change.
+
+---
+
+# Root Module vs Child Module
+
+## Root Module
+
+The Root Module is the entry point of the Terraform project.
+
+Responsibilities:
+
+- Configure providers
+- Pass variables
+- Call modules
+- Expose outputs
+
+Example:
+
+```text
+terraform/
+│
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── terraform.tfvars
+```
+
+---
+
+## Child Module
+
+A Child Module contains reusable infrastructure.
+
+Example:
+
+```text
+modules/
+└── vpc/
+```
+
+Responsibilities:
+
+- Create AWS resources
+- Accept input variables
+- Return outputs
+
+---
+
+# Module Structure
+
+Create the following directory structure.
+
+```text
+terraform/
+└── modules/
+    └── vpc/
+        ├── main.tf
+        ├── variables.tf
+        ├── outputs.tf
+        └── README.md
+```
+
+> **Note:**  
+> We will **not** create a `locals.tf` file inside the module at this stage.  
+> Local values will continue to be managed by the Root Module.
+
+---
+
+# Step 1 – Create the Module Folder
+
+Create the following directory.
+
+```text
+terraform/
+└── modules/
+    └── vpc/
+```
+
+---
+
+# Step 2 – Create `modules/vpc/variables.tf`
+
+Create:
+
+```text
+terraform/modules/vpc/variables.tf
+```
+
+Add the following code.
+
+```hcl
+#############################################
+# VPC Variables
+#############################################
+
+variable "project_name" {
+  description = "Project name."
+  type        = string
+}
+
+variable "environment" {
+  description = "Deployment environment."
+  type        = string
+}
+
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC."
+  type        = string
+}
+
+variable "common_tags" {
+  description = "Common tags applied to all resources."
+  type        = map(string)
+}
+```
+
+---
+
+# Why These Variables?
+
+The module is designed to be reusable.
+
+Today:
+
+```text
+Project = LinkedIn
+```
+
+Tomorrow:
+
+```text
+Project = Airbnb
+```
+
+Next month:
+
+```text
+Project = Netflix
+```
+
+The module remains exactly the same.
+
+Only the input values change.
+
+This is one of the core principles of modular Terraform design.
+
+---
+
+# Step 3 – Create `modules/vpc/main.tf`
+
+Create:
+
+```text
+terraform/modules/vpc/main.tf
+```
+
+Add:
+
+```hcl
+#############################################
+# VPC
+#############################################
+
+resource "aws_vpc" "main" {
+
+  cidr_block           = var.vpc_cidr
+
+  enable_dns_support   = true
+
+  enable_dns_hostnames = true
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-vpc"
+    }
+  )
+}
+```
+
+---
+
+# Understanding Every Line
+
+## `cidr_block`
+
+```hcl
+cidr_block = var.vpc_cidr
+```
+
+We avoid hardcoding values.
+
+Instead of:
+
+```text
+10.0.0.0/16
+```
+
+the Root Module provides the CIDR block.
+
+Benefits:
+
+- Reusability
+- Flexibility
+- Environment independence
+
+---
+
+## `enable_dns_support`
+
+```hcl
+enable_dns_support = true
+```
+
+Enables AWS DNS resolution inside the VPC.
+
+Without this:
+
+- EC2 instances cannot resolve AWS DNS names.
+- Many AWS-managed services will not function correctly.
+
+### Recommendation
+
+Always enable DNS support unless you have a specific architectural reason not to.
+
+---
+
+## `enable_dns_hostnames`
+
+```hcl
+enable_dns_hostnames = true
+```
+
+Allows EC2 instances to receive DNS hostnames.
+
+Example:
+
+```text
+ip-10-0-1-15.ap-south-1.compute.internal
+```
+
+Required for many AWS services and internal communication.
+
+---
+
+## Enterprise Tags
+
+```hcl
+tags = merge(
+  var.common_tags,
+  {
+    Name = "${var.project_name}-${var.environment}-vpc"
+  }
+)
+```
+
+The `merge()` function combines:
+
+Shared tags from the Root Module:
+
+- Project
+- Environment
+- ManagedBy
+- Owner
+- Repository
+
+with the resource-specific tag:
+
+```text
+Name = linkedin-dev-vpc
+```
+
+Final result:
+
+```text
+Project     = linkedin
+Environment = dev
+ManagedBy   = Terraform
+Owner       = Mukesh Kumar
+Repository  = terraform-aws-infrastructure
+Name        = linkedin-dev-vpc
+```
+
+---
+
+# Step 4 – Create `modules/vpc/outputs.tf`
+
+Create:
+
+```text
+terraform/modules/vpc/outputs.tf
+```
+
+Add:
+
+```hcl
+#############################################
+# VPC Outputs
+#############################################
+
+output "vpc_id" {
+  description = "ID of the VPC."
+  value       = aws_vpc.main.id
+}
+
+output "vpc_arn" {
+  description = "ARN of the VPC."
+  value       = aws_vpc.main.arn
+}
+
+output "vpc_cidr" {
+  description = "CIDR block of the VPC."
+  value       = aws_vpc.main.cidr_block
+}
+```
+
+---
+
+# Why Outputs?
+
+Outputs expose important information from the Child Module.
+
+Later modules such as:
+
+- Public Subnets
+- Security Groups
+- EC2
+- RDS
+
+will consume the VPC ID.
+
+Example:
+
+```hcl
+module.vpc.vpc_id
+```
+
+---
+
+# Step 5 – Create `modules/vpc/README.md`
+
+Create:
+
+```text
+terraform/modules/vpc/README.md
+```
+
+Add:
+
+````markdown
+# VPC Module
+
+## Purpose
+
+Creates a reusable AWS VPC.
+
+## Resources
+
+- AWS VPC
+
+## Inputs
+
+- project_name
+- environment
+- vpc_cidr
+- common_tags
+
+## Outputs
+
+- vpc_id
+- vpc_arn
+- vpc_cidr
+---
+
+# 🚀 Phase 3.3 – Subnet Design
+
+**Duration:** 2–3 Hours
+
+---
+
+# 🎯 Goal
+
+Design the subnet architecture for the production VPC.
+
+In this step, we'll prepare the Terraform module to support:
+
+- ✅ Public Subnet A
+- ✅ Public Subnet B
+- ✅ Private Application Subnet A
+- ✅ Private Application Subnet B
+- ✅ Private Database Subnet A
+- ✅ Private Database Subnet B
+
+> **Note**
+>
+> In this step, we are **designing the subnet architecture and updating module inputs only**.
+>
+> The actual subnet resources (`aws_subnet`) will be created in the next step.
+
+---
+
+# 📖 Learning Objectives
+
+By the end of this step, you'll understand:
+
+- Why production VPCs use multiple subnets
+- Public vs Private subnet design
+- Application tier vs Database tier
+- CIDR planning
+- Availability Zones
+- Terraform list variables
+- Passing lists into modules
+- Enterprise networking best practices
+
+---
+
+# Final Network Layout
+
+```text
+VPC
+10.0.0.0/16
+
+│
+
+├── Public Subnet A
+
+├── Public Subnet B
+
+├── Private App Subnet A
+
+├── Private App Subnet B
+
+├── Private DB Subnet A
+
+└── Private DB Subnet B
+```
+
+This network design provides logical separation between internet-facing resources, application servers, and the database layer.
+
+---
+
+# Why Six Subnets?
+
+One of the most common AWS interview questions is:
+
+> **"Why not create a single subnet?"**
+
+Production workloads require much more than a single network.
+
+Using six subnets provides:
+
+- High Availability
+- Better Security
+- Network Isolation
+- Separation of Responsibilities
+- Scalability
+- Easier Maintenance
+
+Each subnet serves a dedicated purpose.
+
+---
+
+# Public Subnets
+
+## Purpose
+
+Public Subnets host resources that must communicate directly with the Internet.
+
+Resources include:
+
+- Application Load Balancer (ALB)
+- NAT Gateway (added later)
+
+Traffic flow:
+
+```text
+Internet
+     │
+     ▼
+Internet Gateway
+     │
+     ▼
+Public Subnets
+```
+
+Only internet-facing resources belong here.
+
+---
+
+# Private Application Subnets
+
+## Purpose
+
+Private Application Subnets host the application layer.
+
+Resources include:
+
+- Amazon EC2
+- Auto Scaling Group
+
+Characteristics:
+
+- No public IP addresses
+- Accessible only through the ALB
+- Protected by Security Groups
+
+Users never connect directly to these instances.
+
+---
+
+# Private Database Subnets
+
+## Purpose
+
+Private Database Subnets host the database layer.
+
+Resources include:
+
+- Amazon RDS PostgreSQL
+
+Traffic flow:
+
+```text
+Internet
+     │
+     ▼
+Application Load Balancer
+     │
+     ▼
+EC2
+     │
+     ▼
+Amazon RDS
+```
+
+The database is never directly accessible from the Internet.
+
+---
+
+# CIDR Plan
+
+The following CIDR allocation will be used throughout the project.
+
+| Resource | CIDR | Availability Zone |
+|-----------|------|-------------------|
+| Public Subnet A | `10.0.1.0/24` | `ap-south-1a` |
+| Public Subnet B | `10.0.2.0/24` | `ap-south-1b` |
+| Private App Subnet A | `10.0.11.0/24` | `ap-south-1a` |
+| Private App Subnet B | `10.0.12.0/24` | `ap-south-1b` |
+| Private DB Subnet A | `10.0.21.0/24` | `ap-south-1a` |
+| Private DB Subnet B | `10.0.22.0/24` | `ap-south-1b` |
+
+---
+
+# Why This CIDR Layout?
+
+The subnet ranges are intentionally separated.
+
+Benefits include:
+
+- Easier identification
+- Better organization
+- Simpler troubleshooting
+- Room for future expansion
+
+Example:
+
+```text
+10.0.1.x
+
+↓
+
+Public
+
+10.0.11.x
+
+↓
+
+Application
+
+10.0.21.x
+
+↓
+
+Database
+```
+
+This structure is commonly used in enterprise AWS environments.
+
+---
+
+# First Improvement to the VPC Module
+
+The current VPC module contains only the VPC resource.
+
+Instead of hardcoding subnet CIDRs later, we'll make them configurable.
+
+This makes the module reusable across:
+
+- Development
+- Staging
+- Production
+- Future projects
+
+---
+
+# Step 1 – Update `modules/vpc/variables.tf`
+
+Add the following variables.
+
+```hcl
+#############################################
+# Availability Zones
+#############################################
+
+variable "availability_zones" {
+  description = "Availability Zones used by the VPC."
+  type        = list(string)
+}
+
+#############################################
+# Public Subnets
+#############################################
+
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for public subnets."
+  type        = list(string)
+}
+
+#############################################
+# Private Application Subnets
+#############################################
+
+variable "private_app_subnet_cidrs" {
+  description = "CIDR blocks for private application subnets."
+  type        = list(string)
+}
+
+#############################################
+# Private Database Subnets
+#############################################
+
+variable "private_db_subnet_cidrs" {
+  description = "CIDR blocks for private database subnets."
+  type        = list(string)
+}
+```
+
+---
+
+# Why Use Lists?
+
+Each subnet category contains multiple values.
+
+Example:
+
+```text
+Public Subnets
+
+↓
+
+10.0.1.0/24
+
+10.0.2.0/24
+```
+
+Terraform stores these values as a list.
+
+Example:
+
+```hcl
+public_subnet_cidrs = [
+
+  "10.0.1.0/24",
+
+  "10.0.2.0/24"
+
+]
+```
+
+Lists make it easy to iterate over resources later using:
+
+- `count`
+- `for_each`
+
+---
+
+# Step 2 – Update Root `variables.tf`
+
+Add the same variable definitions to the Root Module.
+
+These variables allow the Root Module to pass subnet configuration into the Child Module.
+
+The Root Module remains responsible for configuration.
+
+The Child Module remains responsible for implementation.
+
+---
+
+# Step 3 – Update `terraform.tfvars`
+
+Add the following values.
+
+```hcl
+#############################################
+# Availability Zones
+#############################################
+
+availability_zones = [
+  "ap-south-1a",
+  "ap-south-1b"
+]
+
+#############################################
+# Public Subnets
+#############################################
+
+public_subnet_cidrs = [
+  "10.0.1.0/24",
+  "10.0.2.0/24"
+]
+
+#############################################
+# Private Application Subnets
+#############################################
+
+private_app_subnet_cidrs = [
+  "10.0.11.0/24",
+  "10.0.12.0/24"
+]
+
+#############################################
+# Private Database Subnets
+#############################################
+
+private_db_subnet_cidrs = [
+  "10.0.21.0/24",
+  "10.0.22.0/24"
+]
+```
+
+Keeping configuration in `terraform.tfvars` allows the same Terraform code to be reused across multiple environments.
+
+---
+
+# Step 4 – Update Root `main.tf`
+
+Pass the new variables into the VPC Module.
+
+```hcl
+module "vpc" {
+
+  source = "./modules/vpc"
+
+  project_name = var.project_name
+
+  environment = var.environment
+
+  vpc_cidr = var.vpc_cidr
+
+  common_tags = local.common_tags
+
+  availability_zones = var.availability_zones
+
+  public_subnet_cidrs = var.public_subnet_cidrs
+
+  private_app_subnet_cidrs = var.private_app_subnet_cidrs
+
+  private_db_subnet_cidrs = var.private_db_subnet_cidrs
+
+}
+```
+
+The Root Module continues acting as the orchestrator.
+
+The Child Module receives everything it needs through variables.
+
+---
+
+# Validation
+
+Run the following commands from the `terraform/` directory.
+
+```bash
+terraform fmt -recursive
+
+terraform validate
+
+terraform plan
+```
+
+Since the subnet resources have not been created yet, the execution plan should still show only the VPC resource.
+
+Validation should complete successfully.
+
+---
+
+# Best Practices
+
+- Separate Public, Application, and Database networks.
+- Never hardcode subnet CIDRs inside modules.
+- Pass configuration through variables.
+- Use list variables for multiple subnet values.
+- Keep the Root Module responsible for configuration.
+- Keep Child Modules reusable.
+- Plan the network before writing Terraform resources.
+
+---
+
+# Phase Summary
+
+After completing **Phase 3.3 – Subnet Design**, you will have:
+
+- Designed a production-ready subnet architecture.
+- Planned six subnets across two Availability Zones.
+- Understood why production environments separate network tiers.
+- Updated the VPC module to accept subnet configuration.
+- Added reusable list variables.
+- Configured subnet CIDRs using `terraform.tfvars`.
+- Connected the subnet configuration to the Root Module.
+
+In the next step, these subnet definitions will be used to create the actual **AWS Subnet resources** using Terraform.
+
+---
+
+# 🚀 Phase 3.4 – Create `subnets.tf`
+
+**Duration:** 2–4 Hours
+
+---
+
+# 🎯 Goal
+
+Create all **six AWS subnets** for the production VPC.
+
+This step provisions:
+
+- ✅ 2 Public Subnets
+- ✅ 2 Private Application Subnets
+- ✅ 2 Private Database Subnets
+
+These subnets will be distributed across **two Availability Zones** to support a highly available architecture.
+
+> **Note**
+>
+> In this step, we create only the subnets.
+>
+> Internet Gateway, NAT Gateway, Route Tables, and Route Associations will be implemented in later steps.
+
+---
+
+# 📖 Learning Objectives
+
+By the end of this step, you will understand:
+
+- AWS Subnets
+- Public vs Private Subnets
+- Multi-AZ networking
+- Terraform `count`
+- Terraform list indexing
+- Dynamic subnet creation
+- Terraform outputs
+- Enterprise module organization
+
+---
+
+# Before We Write Code
+
+Our current VPC module looks like this:
+
+```text
+modules/
+└── vpc/
+    ├── main.tf
+    ├── variables.tf
+    └── outputs.tf
+```
+
+As the project grows, placing every resource inside a single `main.tf` file becomes difficult to maintain.
+
+---
+
+# Enterprise Module Structure
+
+A better organization is:
+
+```text
+modules/
+└── vpc/
+    ├── vpc.tf
+    ├── subnets.tf
+    ├── internet-gateway.tf
+    ├── route-tables.tf
+    ├── routes.tf
+    ├── variables.tf
+    ├── outputs.tf
+    └── README.md
+```
+
+Each file has one responsibility.
+
+Benefits:
+
+- Easier navigation
+- Cleaner code
+- Better collaboration
+- Simpler troubleshooting
+- Scalable module design
+
+---
+
+# Step 1 – Refactor the Module
+
+Rename:
+
+```text
+modules/vpc/main.tf
+```
+
+to:
+
+```text
+modules/vpc/vpc.tf
+```
+
+The contents remain exactly the same.
+
+Terraform automatically loads every `.tf` file within the directory, so this change has no impact on functionality.
+
+---
+
+# Step 2 – Create `subnets.tf`
+
+Create:
+
+```text
+terraform/modules/vpc/subnets.tf
+```
+
+This file will contain all subnet resources.
+
+---
+
+# Step 3 – Create Public Subnets
+
+Add:
+
+```hcl
+#############################################
+# Public Subnets
+#############################################
+
+resource "aws_subnet" "public" {
+
+  count = length(var.public_subnet_cidrs)
+
+  vpc_id = aws_vpc.main.id
+
+  cidr_block = var.public_subnet_cidrs[count.index]
+
+  availability_zone = var.availability_zones[count.index]
+
+  map_public_ip_on_launch = true
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-public-subnet-${count.index + 1}"
+      Type = "Public"
+    }
+  )
+}
+```
+
+---
+
+# Understanding the Configuration
+
+## Why `count`?
+
+Instead of creating two separate resources:
+
+```hcl
+resource "aws_subnet" "public_a" {}
+
+resource "aws_subnet" "public_b" {}
+```
+
+we use a single resource block.
+
+Terraform automatically creates multiple resources.
+
+Example:
+
+```text
+count = 2
+```
+
+Results in:
+
+```text
+aws_subnet.public[0]
+
+aws_subnet.public[1]
+```
+
+This approach is cleaner and easier to maintain.
+
+---
+
+## `map_public_ip_on_launch`
+
+```hcl
+map_public_ip_on_launch = true
+```
+
+Every EC2 instance launched inside a Public Subnet automatically receives a public IP address.
+
+This is required for internet-facing resources.
+
+---
+
+# Step 4 – Create Private Application Subnets
+
+Add:
+
+```hcl
+#############################################
+# Private Application Subnets
+#############################################
+
+resource "aws_subnet" "private_app" {
+
+  count = length(var.private_app_subnet_cidrs)
+
+  vpc_id = aws_vpc.main.id
+
+  cidr_block = var.private_app_subnet_cidrs[count.index]
+
+  availability_zone = var.availability_zones[count.index]
+
+  map_public_ip_on_launch = false
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-private-app-subnet-${count.index + 1}"
+      Type = "Private-App"
+    }
+  )
+}
+```
+
+---
+
+# Why Disable Public IPs?
+
+```hcl
+map_public_ip_on_launch = false
+```
+
+Application servers should never be directly accessible from the Internet.
+
+Traffic should always follow:
+
+```text
+Internet
+
+↓
+
+Application Load Balancer
+
+↓
+
+EC2
+```
+
+This improves security and follows AWS best practices.
+
+---
+
+# Step 5 – Create Private Database Subnets
+
+Add:
+
+```hcl
+#############################################
+# Private Database Subnets
+#############################################
+
+resource "aws_subnet" "private_db" {
+
+  count = length(var.private_db_subnet_cidrs)
+
+  vpc_id = aws_vpc.main.id
+
+  cidr_block = var.private_db_subnet_cidrs[count.index]
+
+  availability_zone = var.availability_zones[count.index]
+
+  map_public_ip_on_launch = false
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-private-db-subnet-${count.index + 1}"
+      Type = "Private-DB"
+    }
+  )
+}
+```
+
+---
+
+# Database Network Design
+
+Database Subnets are private.
+
+Traffic flow:
+
+```text
+Internet
+
+↓
+
+Application Load Balancer
+
+↓
+
+EC2
+
+↓
+
+Amazon RDS
+```
+
+Databases should never receive direct internet traffic.
+
+---
+
+# Resources Created
+
+Terraform will now create:
+
+```text
+aws_vpc.main
+
+aws_subnet.public[0]
+
+aws_subnet.public[1]
+
+aws_subnet.private_app[0]
+
+aws_subnet.private_app[1]
+
+aws_subnet.private_db[0]
+
+aws_subnet.private_db[1]
+```
+
+Total resources:
+
+- **1 Amazon VPC**
+- **6 Amazon Subnets**
+
+---
+
+# Step 6 – Update Module Outputs
+
+Open:
+
+```text
+terraform/modules/vpc/outputs.tf
+```
+
+Add:
+
+```hcl
+#############################################
+# Public Subnets
+#############################################
+
+output "public_subnet_ids" {
+  description = "IDs of public subnets."
+  value       = aws_subnet.public[*].id
+}
+
+#############################################
+# Private Application Subnets
+#############################################
+
+output "private_app_subnet_ids" {
+  description = "IDs of private application subnets."
+  value       = aws_subnet.private_app[*].id
+}
+
+#############################################
+# Private Database Subnets
+#############################################
+
+output "private_db_subnet_ids" {
+  description = "IDs of private database subnets."
+  value       = aws_subnet.private_db[*].id
+}
+```
+
+These outputs expose subnet IDs to the Root Module.
+
+---
+
+# Step 7 – Update Root Outputs
+
+Open:
+
+```text
+terraform/outputs.tf
+```
+
+Add:
+
+```hcl
+output "public_subnet_ids" {
+  value = module.vpc.public_subnet_ids
+}
+
+output "private_app_subnet_ids" {
+  value = module.vpc.private_app_subnet_ids
+}
+
+output "private_db_subnet_ids" {
+  value = module.vpc.private_db_subnet_ids
+}
+```
+
+Now other modules can easily consume subnet IDs.
+
+Examples:
+
+- ALB Module
+- EC2 Module
+- RDS Module
+
+---
+
+# Validation
+
+Run the following commands:
+
+```bash
+terraform fmt -recursive
+
+terraform init
+
+terraform validate
+
+terraform plan
+```
+
+---
+
+# Expected Plan
+
+Terraform should report approximately:
+
+```text
+Plan: 7 to add, 0 to change, 0 to destroy.
+```
+
+Resources created:
+
+```text
+1 Amazon VPC
+
+2 Public Subnets
+
+2 Private Application Subnets
+
+2 Private Database Subnets
+```
+
+No Internet Gateway, NAT Gateway, Route Tables, or Security Groups are created in this step.
+
+---
+
+# Best Practices
+
+- Organize Terraform modules into multiple files by responsibility.
+- Use `count` to create similar resources efficiently.
+- Avoid hardcoding subnet CIDRs.
+- Use variables for reusable configurations.
+- Keep application and database resources in private subnets.
+- Expose reusable resource IDs through outputs.
+- Validate the configuration after every change.
+
+---
+
+# Phase Summary
+
+After completing **Phase 3.4 – Create `subnets.tf`**, you will have:
+
+- Created six production-ready subnets.
+- Distributed subnets across two Availability Zones.
+- Used Terraform `count` to dynamically create resources.
+- Applied consistent enterprise tagging.
+- Refactored the VPC module into a cleaner structure.
+- Exposed subnet IDs through module outputs.
+- Prepared the networking layer for Internet Gateway, Route Tables, and NAT Gateway configuration in the next phases.
+
+The network foundation is now in place, making it ready for configuring internet connectivity and routing.
+---
+
+# 🚀 Phase 3.5 – Internet Gateway
+
+**Duration:** 1–2 Hours
+
+---
+
+# 🎯 Goal
+
+Create an **Amazon Internet Gateway (IGW)** and attach it to the VPC.
+
+By the end of this step, your Terraform module will provision:
+
+- ✅ Internet Gateway
+- ✅ Internet Gateway attached to the VPC
+- ✅ Enterprise resource tags
+- ✅ Module outputs
+
+> **Important**
+>
+> Creating an Internet Gateway **does not automatically provide Internet access**.
+>
+> Route Tables and Routes are still required and will be created in the next phase.
+
+---
+
+# 📖 Theory
+
+## What is an Internet Gateway?
+
+An **Internet Gateway (IGW)** is a horizontally scaled, highly available AWS component that enables communication between resources inside a VPC and the public Internet.
+
+Think of it as the **entry and exit point** for Internet traffic.
+
+```text
+Internet
+     │
+     ▼
+Internet Gateway
+     │
+     ▼
+Amazon VPC
+```
+
+Without an Internet Gateway:
+
+- EC2 instances cannot communicate with the Internet.
+- Application Load Balancers cannot receive Internet traffic.
+- Public Subnets cannot function as public networks.
+
+---
+
+# Why Do We Need an Internet Gateway?
+
+Imagine deploying:
+
+- Application Load Balancer
+- EC2 Instances
+- Amazon RDS
+
+Without an Internet Gateway:
+
+```text
+Internet
+
+✖
+
+Cannot reach the VPC
+```
+
+AWS has no path between your VPC and the Internet.
+
+The Internet Gateway provides that connection.
+
+---
+
+# Public vs Private Subnets
+
+A common misconception is:
+
+```text
+Public Subnet
+
+=
+
+Internet Access
+```
+
+This is **incorrect**.
+
+A subnet becomes **public** only when **both** of the following conditions are met:
+
+- A Route Table contains a route to an Internet Gateway (`0.0.0.0/0 → IGW`).
+- Resources have public IP addresses (where applicable).
+
+Without these conditions, it is simply another subnet.
+
+---
+
+# Current Network
+
+After the previous phase, the network looks like this:
+
+```text
+VPC
+
+├── Public Subnet A
+
+├── Public Subnet B
+
+├── Private App Subnet A
+
+├── Private App Subnet B
+
+├── Private DB Subnet A
+
+└── Private DB Subnet B
+```
+
+No Internet connectivity exists yet.
+
+---
+
+# Network After This Step
+
+```text
+Internet
+     │
+     ▼
+Internet Gateway
+     │
+     ▼
+VPC
+     │
+     ▼
+Subnets
+```
+
+The VPC is now connected to the Internet Gateway, but routing is still missing.
+
+---
+
+# Step 1 – Create `internet-gateway.tf`
+
+Inside the VPC module, create:
+
+```text
+terraform/modules/vpc/internet-gateway.tf
+```
+
+Keeping networking resources in dedicated files follows enterprise Terraform practices.
+
+---
+
+# Step 2 – Add the Internet Gateway Resource
+
+Add the following code.
+
+```hcl
+#############################################
+# Internet Gateway
+#############################################
+
+resource "aws_internet_gateway" "main" {
+
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-igw"
+    }
+  )
+}
+```
+
+---
+
+# Understanding Every Line
+
+## Attach to the VPC
+
+```hcl
+vpc_id = aws_vpc.main.id
+```
+
+This attaches the Internet Gateway to the VPC created earlier.
+
+A VPC can have only **one attached Internet Gateway** at a time.
+
+Terraform automatically establishes the dependency because the Internet Gateway references the VPC ID.
+
+---
+
+## Enterprise Tags
+
+```hcl
+tags = merge(
+  var.common_tags,
+  {
+    Name = "${var.project_name}-${var.environment}-igw"
+  }
+)
+```
+
+The `merge()` function combines:
+
+Shared tags:
+
+- Project
+- Environment
+- ManagedBy
+- Owner
+- Repository
+
+with a resource-specific Name tag.
+
+Example:
+
+```text
+linkedin-dev-igw
+```
+
+or
+
+```text
+linkedin-clone-dev-igw
+```
+
+depending on your project name.
+
+---
+
+# Step 3 – Add Module Output
+
+Open:
+
+```text
+terraform/modules/vpc/outputs.tf
+```
+
+Add:
+
+```hcl
+#############################################
+# Internet Gateway
+#############################################
+
+output "internet_gateway_id" {
+  description = "ID of the Internet Gateway."
+  value       = aws_internet_gateway.main.id
+}
+```
+
+This output allows other modules or the Root Module to reference the Internet Gateway.
+
+---
+
+# Step 4 – Expose the Output in the Root Module
+
+Open:
+
+```text
+terraform/outputs.tf
+```
+
+Add:
+
+```hcl
+output "internet_gateway_id" {
+  description = "Internet Gateway ID."
+  value       = module.vpc.internet_gateway_id
+}
+```
+
+Now the Internet Gateway ID is available from the Root Module.
+
+---
+
+# Validation
+
+Run the following commands:
+
+```bash
+terraform fmt -recursive
+
+terraform validate
+
+terraform plan
+```
+
+---
+
+# Expected Plan
+
+Terraform should report approximately:
+
+```text
+Plan: 8 to add, 0 to change, 0 to destroy.
+```
+
+Resources include:
+
+- 1 Amazon VPC
+- 6 Amazon Subnets
+- 1 Internet Gateway
+
+---
+
+# Why Doesn't the Internet Work Yet?
+
+Although the Internet Gateway has been created and attached to the VPC, Internet connectivity is still unavailable.
+
+Why?
+
+Because AWS still does not know **where Internet-bound traffic should go**.
+
+A Route Table is required.
+
+The Route Table must contain:
+
+```text
+Destination:
+
+0.0.0.0/0
+
+↓
+
+Target:
+
+Internet Gateway
+```
+
+Without this route:
+
+```text
+Internet
+
+↓
+
+Internet Gateway
+
+↓
+
+VPC
+
+✖
+
+Traffic Stops
+```
+
+No packets are forwarded to the Internet.
+
+This is one of the most common AWS networking interview questions.
+
+---
+
+# AWS Networking Flow
+
+Current architecture:
+
+```text
+Internet
+     │
+     ▼
+Internet Gateway
+     │
+     ▼
+VPC
+     │
+     ▼
+Subnets
+```
+
+Still missing:
+
+- Route Tables
+- Routes
+- Route Table Associations
+
+These components will complete Internet connectivity in the next phase.
+
+---
+
+# Best Practices
+
+- Attach only one Internet Gateway to a VPC.
+- Separate Internet Gateway configuration into its own Terraform file.
+- Use enterprise tagging for all networking resources.
+- Expose reusable IDs using Terraform outputs.
+- Keep networking components modular and easy to maintain.
+- Understand that Internet connectivity requires both an Internet Gateway and proper routing.
+
+---
+
+# Phase Summary
+
+After completing **Phase 3.5 – Internet Gateway**, you will have:
+
+- Created an Amazon Internet Gateway.
+- Attached the Internet Gateway to the VPC.
+- Applied enterprise tagging standards.
+- Exposed the Internet Gateway ID through module outputs.
+- Understood the role of the Internet Gateway in AWS networking.
+- Learned why an Internet Gateway alone does not provide Internet access.
+
+The next phase will create **Route Tables and Routes**, allowing Public Subnets to communicate with the Internet.
+---
+
+# 🚀 Phase 3.6 – Route Tables & Route Associations
+
+**Duration:** 2–4 Hours
+
+---
+
+# 🎯 Goal
+
+Build the **routing layer** of the VPC by creating Route Tables, Routes, and Route Table Associations.
+
+By the end of this step, the network will support Internet access for Public Subnets while preparing the Private Subnets for future NAT Gateway integration.
+
+---
+
+# 📚 Learning Objectives
+
+By the end of this step, you'll understand:
+
+- What is a Route Table?
+- How AWS routing works
+- Public vs Private routing
+- Route Table Associations
+- Internet routes
+- Default routes
+- Why Private Subnets do not have Internet routes
+- Enterprise networking best practices
+
+---
+
+# Final Network After This Step
+
+```text
+                     Internet
+                         │
+                  Internet Gateway
+                         │
+                 Public Route Table
+                         │
+        ┌────────────────┴────────────────┐
+        │                                 │
+ Public Subnet A                  Public Subnet B
+
+Private Route Tables
+
+├── Private App Route Table
+│       │
+│       ├── Private App Subnet A
+│       └── Private App Subnet B
+│
+└── Private DB Route Table
+        │
+        ├── Private DB Subnet A
+        └── Private DB Subnet B
+```
+
+Private Route Tables are created now but **will not have Internet access** until a NAT Gateway is added in the next phase.
+
+---
+
+# 📖 Theory
+
+## What is a Route Table?
+
+A **Route Table** tells AWS where network traffic should go.
+
+Think of it as **Google Maps for your network**.
+
+Every packet checks the Route Table before leaving its subnet.
+
+Example:
+
+| Destination | Target |
+|-------------|--------|
+| `10.0.0.0/16` | Local VPC |
+| `0.0.0.0/0` | Internet Gateway |
+
+Without a Route Table, packets have no routing instructions.
+
+---
+
+# How Routing Works
+
+Imagine an EC2 instance wants to reach the Internet.
+
+AWS checks:
+
+```text
+EC2
+
+↓
+
+Subnet
+
+↓
+
+Route Table
+
+↓
+
+Internet Gateway
+
+↓
+
+Internet
+```
+
+If no matching route exists, traffic is dropped.
+
+---
+
+# Enterprise Route Table Design
+
+We'll create **three Route Tables**.
+
+```text
+Public Route Table
+
+↓
+
+Public Subnets
+```
+
+```text
+Private App Route Table
+
+↓
+
+Private App Subnets
+```
+
+```text
+Private Database Route Table
+
+↓
+
+Private Database Subnets
+```
+
+Each Route Table serves a different purpose.
+
+---
+
+# Why Three Route Tables?
+
+Different application layers have different networking requirements.
+
+| Layer | Internet Access |
+|--------|-----------------|
+| Public | Yes |
+| Application | Outbound only (via NAT Gateway later) |
+| Database | No Internet access |
+
+Keeping separate Route Tables provides:
+
+- Better security
+- Better control
+- Easier troubleshooting
+- Enterprise architecture
+
+---
+
+# Module File Structure
+
+Create the following files inside the VPC module:
+
+```text
+terraform/
+└── modules/
+    └── vpc/
+        ├── vpc.tf
+        ├── subnets.tf
+        ├── internet-gateway.tf
+        ├── route-tables.tf
+        ├── routes.tf
+        ├── variables.tf
+        ├── outputs.tf
+        └── README.md
+```
+
+Each file has a single responsibility.
+
+---
+
+# Step 1 – Create `route-tables.tf`
+
+Create:
+
+```text
+terraform/modules/vpc/route-tables.tf
+```
+
+---
+
+# Step 2 – Create the Public Route Table
+
+Add:
+
+```hcl
+#############################################
+# Public Route Table
+#############################################
+
+resource "aws_route_table" "public" {
+
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-public-rt"
+    }
+  )
+}
+```
+
+This Route Table will later contain the route to the Internet Gateway.
+
+---
+
+# Step 3 – Create the Private Application Route Table
+
+Add:
+
+```hcl
+#############################################
+# Private Application Route Table
+#############################################
+
+resource "aws_route_table" "private_app" {
+
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-private-app-rt"
+    }
+  )
+}
+```
+
+This Route Table will later send outbound traffic through a NAT Gateway.
+
+---
+
+# Step 4 – Create the Private Database Route Table
+
+Add:
+
+```hcl
+#############################################
+# Private Database Route Table
+#############################################
+
+resource "aws_route_table" "private_db" {
+
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-${var.environment}-private-db-rt"
+    }
+  )
+}
+```
+
+The Database Route Table intentionally has **no Internet route**.
+
+This keeps the database isolated.
+
+---
+
+# Step 5 – Create `routes.tf`
+
+Create:
+
+```text
+terraform/modules/vpc/routes.tf
+```
+
+---
+
+# Step 6 – Add the Public Internet Route
+
+Add:
+
+```hcl
+#############################################
+# Public Internet Route
+#############################################
+
+resource "aws_route" "public_internet_access" {
+
+  route_table_id = aws_route_table.public.id
+
+  destination_cidr_block = "0.0.0.0/0"
+
+  gateway_id = aws_internet_gateway.main.id
+}
+```
+
+---
+
+# Understanding the Default Route
+
+```text
+0.0.0.0/0
+```
+
+means:
+
+**Any IPv4 destination**
+
+Whenever traffic is not destined for the local VPC, AWS forwards it to the Internet Gateway.
+
+Example:
+
+```text
+EC2
+
+↓
+
+Public Route Table
+
+↓
+
+0.0.0.0/0
+
+↓
+
+Internet Gateway
+
+↓
+
+Internet
+```
+
+---
+
+# Step 7 – Associate the Public Route Table
+
+Still inside `routes.tf`, add:
+
+```hcl
+#############################################
+# Public Route Table Associations
+#############################################
+
+resource "aws_route_table_association" "public" {
+
+  count = length(aws_subnet.public)
+
+  subnet_id = aws_subnet.public[count.index].id
+
+  route_table_id = aws_route_table.public.id
+}
+```
+
+Terraform automatically associates both Public Subnets with the Public Route Table.
+
+---
+
+# Step 8 – Associate the Private Application Route Table
+
+Add:
+
+```hcl
+#############################################
+# Private App Associations
+#############################################
+
+resource "aws_route_table_association" "private_app" {
+
+  count = length(aws_subnet.private_app)
+
+  subnet_id = aws_subnet.private_app[count.index].id
+
+  route_table_id = aws_route_table.private_app.id
+}
+```
+
+These subnets remain private because no Internet route exists yet.
+
+---
+
+# Step 9 – Associate the Private Database Route Table
+
+Add:
+
+```hcl
+#############################################
+# Private DB Associations
+#############################################
+
+resource "aws_route_table_association" "private_db" {
+
+  count = length(aws_subnet.private_db)
+
+  subnet_id = aws_subnet.private_db[count.index].id
+
+  route_table_id = aws_route_table.private_db.id
+}
+```
+
+Database subnets are now associated with their dedicated Route Table.
+
+---
+
+# Network Flow
+
+After this step, Internet traffic flows like this:
+
+```text
+Internet
+
+↓
+
+Internet Gateway
+
+↓
+
+Public Route Table
+
+↓
+
+Public Subnets
+```
+
+Private Route Tables exist but **do not yet contain Internet routes**.
+
+This is intentional.
+
+The NAT Gateway will be introduced later.
+
+---
+
+# Resources Created
+
+At this stage, Terraform provisions:
+
+- 1 Amazon VPC
+- 6 Amazon Subnets
+- 1 Internet Gateway
+- 3 Route Tables
+- 1 Internet Route
+- 6 Route Table Associations
+
+---
+
+# Validation
+
+Run the following commands:
+
+```bash
+terraform fmt -recursive
+
+terraform validate
+
+terraform plan
+```
+
+Review the execution plan carefully.
+
+Verify that:
+
+- Route Tables are created.
+- Route Table Associations are created.
+- The Public Route Table contains the default route (`0.0.0.0/0`).
+- Private Route Tables do **not** contain Internet routes.
+
+---
+
+# Best Practices
+
+- Use separate Route Tables for Public, Application, and Database tiers.
+- Associate every subnet with the appropriate Route Table.
+- Avoid Internet routes in Private Route Tables.
+- Keep routing resources in dedicated Terraform files.
+- Apply consistent enterprise tags to Route Tables.
+- Use `count` for repeated Route Table Associations.
+- Always validate the routing design before deployment.
+
+---
+
+# Phase Summary
+
+After completing **Phase 3.6 – Route Tables & Route Associations**, you will have:
+
+- Created three Route Tables.
+- Created the default Internet route for Public Subnets.
+- Associated all six subnets with the correct Route Tables.
+- Built the routing layer for the VPC.
+- Prepared Private Route Tables for future NAT Gateway integration.
+- Completed another major component of a production-ready AWS network architecture.
+
+In the next phase, you will add a **NAT Gateway** to provide secure outbound Internet access for Private Application Subnets while keeping them inaccessible from the public Internet.
+---

@@ -3302,3 +3302,1244 @@ After completing this section, you should be able to confidently explain:
 These networking concepts are fundamental to AWS Solution Architect, DevOps Engineer, Cloud Engineer, and Site Reliability Engineer interviews.
 
 ---
+
+# Interview Questions – Phase 3.2: Build the VPC Module
+
+## Overview
+
+These interview questions cover the concepts learned while creating the **Terraform VPC Module**.
+
+The answers are written in an interview-friendly format and focus on **Terraform modules, modular architecture, AWS VPC configuration, tagging, and module communication**.
+
+---
+
+# 1. What is a Terraform Module?
+
+## Answer
+
+A **Terraform Module** is a reusable collection of Terraform configuration files that manage one or more related infrastructure resources.
+
+Instead of writing the same infrastructure repeatedly, we package it into a module that can be reused across multiple projects.
+
+For example:
+
+```text
+modules/
+├── vpc/
+├── ec2/
+├── alb/
+└── rds/
+```
+
+Each module has a single responsibility and can be used by different environments or applications.
+
+### Benefits
+
+* Code reuse
+* Consistent infrastructure
+* Easier maintenance
+* Better organization
+* Simpler testing
+* Reduced duplication
+
+### Interview Tip
+
+> "A Terraform module is a reusable building block that groups related infrastructure resources together and promotes modular Infrastructure as Code."
+
+---
+
+# 2. Why create a VPC module instead of writing the resource in `main.tf`?
+
+## Answer
+
+In enterprise Terraform projects, the **Root Module (`main.tf`)** should orchestrate infrastructure rather than implement it.
+
+If every AWS resource is written directly in `main.tf`, the file becomes:
+
+* Difficult to read
+* Difficult to maintain
+* Difficult to reuse
+
+Instead, the VPC is placed in a dedicated module.
+
+Example:
+
+```text
+Root Module
+     │
+     ▼
+module "vpc"
+     │
+     ▼
+AWS VPC
+```
+
+This approach keeps the project modular and scalable.
+
+### Benefits
+
+* Reusable across multiple projects
+* Smaller files
+* Better separation of responsibilities
+* Easier collaboration
+* Cleaner architecture
+
+### Interview Tip
+
+> "I keep `main.tf` focused on orchestration and place infrastructure resources inside reusable child modules."
+
+---
+
+# 3. What is the difference between the Root Module and a Child Module?
+
+## Answer
+
+### Root Module
+
+The Root Module is the entry point of the Terraform project.
+
+Responsibilities include:
+
+* Configuring providers
+* Passing variables
+* Calling child modules
+* Managing outputs
+
+Example:
+
+```text
+terraform/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── terraform.tfvars
+```
+
+---
+
+### Child Module
+
+A Child Module contains reusable infrastructure logic.
+
+Example:
+
+```text
+modules/
+└── vpc/
+```
+
+Responsibilities include:
+
+* Creating AWS resources
+* Accepting input variables
+* Returning output values
+
+### Summary
+
+| Root Module                | Child Module                      |
+| -------------------------- | --------------------------------- |
+| Entry point of the project | Reusable infrastructure component |
+| Calls modules              | Creates resources                 |
+| Passes variables           | Uses variables                    |
+| Consumes outputs           | Exposes outputs                   |
+
+### Interview Tip
+
+> "The Root Module coordinates the infrastructure, while Child Modules implement reusable infrastructure components."
+
+---
+
+# 4. Why enable `enable_dns_support`?
+
+## Answer
+
+`enable_dns_support` enables AWS DNS resolution within the VPC.
+
+Example:
+
+```hcl
+enable_dns_support = true
+```
+
+Without it:
+
+* EC2 instances cannot resolve AWS DNS names.
+* Internal AWS services may not function correctly.
+* Communication between AWS-managed services can fail.
+
+For most production environments, this setting should remain enabled.
+
+### Interview Tip
+
+> "`enable_dns_support` allows resources inside the VPC to resolve DNS names using the AWS-provided DNS service."
+
+---
+
+# 5. Why enable `enable_dns_hostnames`?
+
+## Answer
+
+`enable_dns_hostnames` allows EC2 instances within the VPC to receive DNS hostnames.
+
+Example:
+
+```hcl
+enable_dns_hostnames = true
+```
+
+A typical hostname looks like:
+
+```text
+ip-10-0-1-15.ap-south-1.compute.internal
+```
+
+Benefits include:
+
+* Easier instance identification
+* Support for internal service communication
+* Compatibility with many AWS services
+
+This setting is commonly enabled in production VPCs.
+
+### Interview Tip
+
+> "`enable_dns_hostnames` assigns DNS hostnames to EC2 instances, which simplifies communication and supports AWS-managed services."
+
+---
+
+# 6. Why use `merge()` for tags?
+
+## Answer
+
+The `merge()` function combines multiple maps into one.
+
+Example:
+
+```hcl
+tags = merge(
+  var.common_tags,
+  {
+    Name = "${var.project_name}-${var.environment}-vpc"
+  }
+)
+```
+
+This combines:
+
+Shared tags:
+
+* Project
+* Environment
+* ManagedBy
+* Owner
+* Repository
+
+with resource-specific tags:
+
+```text
+Name = linkedin-dev-vpc
+```
+
+### Benefits
+
+* Reduces duplication
+* Ensures consistent tagging
+* Simplifies maintenance
+* Makes adding new tags easier
+
+### Interview Tip
+
+> "Using `merge()` allows me to apply common enterprise tags while adding resource-specific tags without repeating code."
+
+---
+
+# 7. How are module outputs consumed by the Root Module?
+
+## Answer
+
+Child Modules expose values using **outputs**.
+
+Example inside the Child Module:
+
+```hcl
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
+```
+
+The Root Module accesses the output using:
+
+```hcl
+module.vpc.vpc_id
+```
+
+Example:
+
+```hcl
+output "vpc_id" {
+  value = module.vpc.vpc_id
+}
+```
+
+These outputs can also be passed into other modules.
+
+Example:
+
+```text
+VPC Module
+     │
+     ▼
+Outputs VPC ID
+     │
+     ▼
+Security Group Module
+     │
+     ▼
+EC2 Module
+```
+
+This enables clean communication between modules.
+
+### Interview Tip
+
+> "Child Modules expose values through outputs, and the Root Module references them using the `module.<module_name>.<output_name>` syntax."
+
+---
+
+# Quick Revision
+
+| Question                           | Key Point                                                 |
+| ---------------------------------- | --------------------------------------------------------- |
+| What is a Terraform Module?        | A reusable collection of Terraform configuration files.   |
+| Why create a VPC module?           | To improve reusability, maintainability, and modularity.  |
+| Root Module vs Child Module?       | Root Module orchestrates; Child Module creates resources. |
+| Why enable `enable_dns_support`?   | Enables AWS DNS resolution inside the VPC.                |
+| Why enable `enable_dns_hostnames`? | Allows EC2 instances to receive DNS hostnames.            |
+| Why use `merge()`?                 | Combines common and resource-specific tags.               |
+| How are module outputs consumed?   | Using `module.<module_name>.<output_name>`.               |
+
+---
+
+# Interview Tips
+
+* Explain **why** modules are used, not just what they are.
+* Emphasize that enterprise Terraform projects keep the Root Module small and focused on orchestration.
+* Mention that DNS support and DNS hostnames are standard production settings for AWS VPCs.
+* Explain how consistent tagging improves governance, cost allocation, and resource management.
+* Demonstrate how outputs connect modules together to build modular infrastructure.
+
+---
+
+# Summary
+
+After completing this step, you should be able to confidently explain:
+
+* What a Terraform Module is.
+* Why the VPC is implemented as a reusable Child Module.
+* The difference between the Root Module and Child Modules.
+* The purpose of `enable_dns_support`.
+* The purpose of `enable_dns_hostnames`.
+* Why `merge()` is used for enterprise tagging.
+* How Child Module outputs are consumed by the Root Module and other modules.
+
+These concepts are fundamental to enterprise Terraform development and are frequently assessed in DevOps, Cloud Engineer, Platform Engineer, and Site Reliability Engineer interviews.
+
+---
+# Interview Questions – Phase 3.4: Create `subnets.tf`
+
+## Overview
+
+These interview questions cover the concepts learned while creating the **AWS Subnets** inside the Terraform VPC module.
+
+The answers are written in an interview-friendly format and focus on **AWS networking, subnet design, high availability, Terraform resource creation, and enterprise best practices**.
+
+---
+
+# 1. Why create two Public Subnets?
+
+## Answer
+
+Production applications should not rely on a single Availability Zone.
+
+Creating two Public Subnets allows internet-facing resources to be deployed across multiple Availability Zones.
+
+Typical resources include:
+
+* Application Load Balancer (ALB)
+* NAT Gateway
+
+Benefits include:
+
+* High Availability
+* Fault Tolerance
+* Better Load Distribution
+* AWS Multi-AZ Best Practices
+
+Example:
+
+```text
+Internet
+     │
+     ▼
+Application Load Balancer
+     │
+ ┌───┴───┐
+ ▼       ▼
+Public A Public B
+```
+
+If one Availability Zone fails, the Application Load Balancer continues serving traffic from the remaining Availability Zone.
+
+### Interview Tip
+
+> "Two Public Subnets allow internet-facing services such as the ALB to remain highly available across multiple Availability Zones."
+
+---
+
+# 2. Why create two Private Application Subnets?
+
+## Answer
+
+Application servers should also be distributed across multiple Availability Zones.
+
+Each Private Application Subnet hosts EC2 instances managed by an Auto Scaling Group.
+
+Benefits:
+
+* High Availability
+* Automatic Failover
+* Horizontal Scaling
+* Improved Resilience
+
+Traffic flow:
+
+```text
+Internet
+
+↓
+
+Application Load Balancer
+
+↓
+
+Private App A
+
+Private App B
+```
+
+If one Availability Zone becomes unavailable, the application continues running from the other zone.
+
+### Interview Tip
+
+> "Private Application Subnets provide redundancy for application servers while keeping them isolated from direct internet access."
+
+---
+
+# 3. Why create two Database Subnets?
+
+## Answer
+
+Amazon RDS Multi-AZ deployments require database subnets in multiple Availability Zones.
+
+Creating two Private Database Subnets prepares the infrastructure for:
+
+* Multi-AZ RDS
+* Automatic Failover
+* High Availability
+* Disaster Recovery
+
+Database traffic always flows through the application layer.
+
+```text
+Internet
+
+↓
+
+ALB
+
+↓
+
+EC2
+
+↓
+
+Amazon RDS
+```
+
+The database should never receive traffic directly from the Internet.
+
+### Interview Tip
+
+> "Two Database Subnets enable Multi-AZ database deployments and improve database availability."
+
+---
+
+# 4. Why set `map_public_ip_on_launch = true` only for Public Subnets?
+
+## Answer
+
+The `map_public_ip_on_launch` setting controls whether EC2 instances automatically receive a public IP address.
+
+For Public Subnets:
+
+```hcl
+map_public_ip_on_launch = true
+```
+
+This allows internet-facing resources to communicate directly with the Internet.
+
+For Private Application and Database Subnets:
+
+```hcl
+map_public_ip_on_launch = false
+```
+
+Resources remain private and can only be accessed through controlled network paths.
+
+Benefits:
+
+* Better Security
+* Reduced Attack Surface
+* Controlled Internet Access
+* Compliance with AWS Best Practices
+
+### Interview Tip
+
+> "Only internet-facing resources require public IP addresses. Application servers and databases should remain private."
+
+---
+
+# 5. Why use `count` instead of defining each subnet separately?
+
+## Answer
+
+Terraform's `count` meta-argument allows multiple similar resources to be created from a single resource block.
+
+Instead of writing:
+
+```hcl id="3uk3e8"
+resource "aws_subnet" "public_a" {}
+
+resource "aws_subnet" "public_b" {}
+```
+
+we write:
+
+```hcl id="jlwmjv"
+resource "aws_subnet" "public" {
+
+  count = length(var.public_subnet_cidrs)
+
+}
+```
+
+Terraform automatically creates:
+
+```text id="wvxxt8"
+aws_subnet.public[0]
+
+aws_subnet.public[1]
+```
+
+Benefits:
+
+* Less code
+* Easier maintenance
+* Better scalability
+* Reduced duplication
+
+If additional subnets are required later, only the variable values need to be updated.
+
+### Interview Tip
+
+> "Using `count` allows Terraform to create multiple similar resources dynamically, reducing duplication and improving maintainability."
+
+---
+
+# 6. What is the difference between a Public Subnet and a Private Subnet?
+
+## Answer
+
+The primary difference is **internet accessibility**.
+
+### Public Subnet
+
+Characteristics:
+
+* Connected to an Internet Gateway through a Route Table.
+* Can host resources with public IP addresses.
+* Intended for internet-facing resources.
+
+Examples:
+
+* Application Load Balancer
+* NAT Gateway
+* Bastion Host
+
+---
+
+### Private Subnet
+
+Characteristics:
+
+* No direct route to the Internet Gateway.
+* Resources do not receive public IP addresses.
+* Accessible only through internal AWS networking.
+
+Examples:
+
+* EC2 Application Servers
+* Amazon RDS
+* Internal Services
+
+---
+
+### Comparison
+
+| Public Subnet             | Private Subnet                   |
+| ------------------------- | -------------------------------- |
+| Internet accessible       | No direct internet access        |
+| Public IP addresses       | Private IP addresses only        |
+| Hosts ALB and NAT Gateway | Hosts EC2 and Amazon RDS         |
+| Route to Internet Gateway | No direct Internet Gateway route |
+
+### Interview Tip
+
+> "Public Subnets host internet-facing resources, while Private Subnets host internal resources that should not be directly accessible from the Internet."
+
+---
+
+# Quick Revision
+
+| Question                                                      | Key Point                                                                           |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Why create two Public Subnets?                                | High Availability for internet-facing resources across multiple Availability Zones. |
+| Why create two Private Application Subnets?                   | High Availability and redundancy for EC2 instances.                                 |
+| Why create two Database Subnets?                              | Support Multi-AZ Amazon RDS deployments.                                            |
+| Why enable `map_public_ip_on_launch` only for Public Subnets? | Only internet-facing resources require public IP addresses.                         |
+| Why use `count`?                                              | To dynamically create multiple similar resources with less code.                    |
+| Public vs Private Subnet?                                     | Public Subnets have internet access; Private Subnets are isolated.                  |
+
+---
+
+# Interview Tips
+
+* Explain the reasoning behind the subnet architecture rather than simply describing the resources.
+* Mention that High Availability is achieved by distributing resources across multiple Availability Zones.
+* Emphasize that databases should always remain in Private Subnets.
+* Explain that `count` improves code reusability and reduces duplication.
+* Relate subnet design decisions to security, scalability, and maintainability.
+
+---
+
+# Summary
+
+After completing this step, you should be able to confidently explain:
+
+* Why production environments use multiple Public and Private Subnets.
+* The purpose of Application and Database subnet separation.
+* Why only Public Subnets assign public IP addresses automatically.
+* How Terraform's `count` meta-argument simplifies subnet creation.
+* The architectural differences between Public and Private Subnets.
+
+These networking concepts are fundamental to AWS Solutions Architect, DevOps Engineer, Cloud Engineer, Platform Engineer, and Site Reliability Engineer interviews and are commonly discussed in enterprise networking scenarios.
+
+---
+# Interview Questions – Phase 3.5: Internet Gateway
+
+## Overview
+
+These interview questions cover the concepts learned while creating and attaching an **Amazon Internet Gateway (IGW)** to a VPC.
+
+The answers focus on **AWS networking fundamentals**, **Internet connectivity**, **public vs private subnets**, and **production networking best practices**.
+
+---
+
+# 1. What is an Internet Gateway?
+
+## Answer
+
+An **Internet Gateway (IGW)** is an AWS-managed networking component that enables communication between a **VPC** and the **public Internet**.
+
+It acts as the entry and exit point for Internet traffic.
+
+Network flow:
+
+```text
+Internet
+     │
+     ▼
+Internet Gateway
+     │
+     ▼
+Amazon VPC
+```
+
+The Internet Gateway performs two primary functions:
+
+* Enables inbound Internet traffic to public resources.
+* Enables outbound Internet access for resources with public IP addresses.
+
+Without an Internet Gateway, a VPC is isolated from the Internet.
+
+### Interview Tip
+
+> "An Internet Gateway connects a VPC to the public Internet and enables inbound and outbound communication for public resources."
+
+---
+
+# 2. Does creating an Internet Gateway automatically make a subnet public?
+
+## Answer
+
+**No.**
+
+Creating and attaching an Internet Gateway to a VPC **does not automatically make any subnet public**.
+
+A subnet becomes public only when **both** of the following conditions are met:
+
+1. The subnet is associated with a Route Table that contains:
+
+```text id="z7t4rq"
+Destination: 0.0.0.0/0
+
+Target: Internet Gateway
+```
+
+2. Resources in the subnet have public IP addresses (either automatically assigned or associated manually).
+
+Without these requirements, the subnet remains private even if an Internet Gateway exists.
+
+### Interview Tip
+
+> "An Internet Gateway alone is not enough. A subnet also needs a route to the Internet Gateway and public IP addresses where appropriate."
+
+---
+
+# 3. Can a VPC have multiple Internet Gateways attached?
+
+## Answer
+
+**No.**
+
+An Amazon VPC can have **only one Internet Gateway attached at a time**.
+
+However:
+
+* One Internet Gateway can serve all Public Subnets within the VPC.
+* Multiple Public Subnets across different Availability Zones share the same Internet Gateway.
+
+Example:
+
+```text id="ih26ho"
+Internet
+     │
+     ▼
+Internet Gateway
+     │
+     ▼
+VPC
+ ┌───┴───────────┐
+ ▼               ▼
+Public A     Public B
+```
+
+This design provides high availability because the Internet Gateway is a managed, highly available AWS service.
+
+### Interview Tip
+
+> "A VPC supports only one attached Internet Gateway, which is shared by all Public Subnets in that VPC."
+
+---
+
+# 4. What is required for a subnet to become public?
+
+## Answer
+
+A subnet is considered **public** only if it satisfies both of the following conditions:
+
+### 1. Route Table
+
+The associated Route Table must contain a default route:
+
+```text id="jbv4cb"
+0.0.0.0/0
+
+↓
+
+Internet Gateway
+```
+
+### 2. Public IP Addresses
+
+Instances launched in the subnet must have public IP addresses.
+
+This is typically enabled using:
+
+```hcl id="kz2h8i"
+map_public_ip_on_launch = true
+```
+
+or by manually assigning Elastic IP addresses where appropriate.
+
+### Example
+
+```text id="rnsvbb"
+Internet
+     │
+     ▼
+Internet Gateway
+     │
+     ▼
+Route Table
+     │
+     ▼
+Public Subnet
+     │
+     ▼
+EC2 with Public IP
+```
+
+Only then can the EC2 instance communicate directly with the Internet.
+
+### Interview Tip
+
+> "A subnet becomes public only when it has a route to an Internet Gateway and its resources have public IP addresses."
+
+---
+
+# 5. Why do Private Subnets not use an Internet Gateway directly?
+
+## Answer
+
+Private Subnets are intentionally isolated from direct Internet access.
+
+Resources such as:
+
+* Application Servers
+* Amazon RDS
+* Internal Services
+
+should never communicate directly with the Internet.
+
+Instead:
+
+* Inbound traffic reaches the Application Load Balancer.
+* The Application Load Balancer forwards requests to private EC2 instances.
+* Private instances use a **NAT Gateway** (when outbound Internet access is required) instead of an Internet Gateway.
+
+Traffic flow:
+
+```text id="brm73n"
+Internet
+     │
+     ▼
+Application Load Balancer
+     │
+     ▼
+Private EC2
+     │
+     ▼
+Amazon RDS
+```
+
+Outbound updates (for example, downloading operating system packages) follow:
+
+```text id="n7ghwq"
+Private EC2
+
+↓
+
+NAT Gateway
+
+↓
+
+Internet Gateway
+
+↓
+
+Internet
+```
+
+This design:
+
+* Improves security.
+* Reduces the attack surface.
+* Protects sensitive application and database resources.
+* Follows AWS Well-Architected Framework recommendations.
+
+### Interview Tip
+
+> "Private Subnets do not connect directly to an Internet Gateway because application servers and databases should remain isolated. Outbound Internet access is provided through a NAT Gateway when needed."
+
+---
+
+# Quick Revision
+
+| Question                                                     | Key Point                                                                                                       |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| What is an Internet Gateway?                                 | Connects a VPC to the public Internet.                                                                          |
+| Does an Internet Gateway automatically make a subnet public? | No. A Route Table and public IPs are also required.                                                             |
+| Can a VPC have multiple Internet Gateways?                   | No. One Internet Gateway can be attached to a VPC at a time.                                                    |
+| What makes a subnet public?                                  | A default route to the Internet Gateway and public IP addresses.                                                |
+| Why don't Private Subnets use an Internet Gateway directly?  | To keep application and database resources isolated; outbound Internet access uses a NAT Gateway when required. |
+
+---
+
+# Interview Tips
+
+* Clearly distinguish between an **Internet Gateway** and a **Public Subnet**.
+* Emphasize that Internet connectivity depends on **both routing and IP addressing**.
+* Mention that Internet Gateways are AWS-managed, highly available services.
+* Explain that Private Subnets protect internal resources by avoiding direct Internet exposure.
+* Use simple network flow diagrams to illustrate how traffic moves through the architecture.
+
+---
+
+# Summary
+
+After completing this step, you should be able to confidently explain:
+
+* The purpose of an Amazon Internet Gateway.
+* Why attaching an Internet Gateway alone does not provide Internet access.
+* Why a VPC supports only one attached Internet Gateway.
+* The conditions required for a subnet to become public.
+* Why Private Subnets rely on NAT Gateways rather than Internet Gateways for outbound Internet access.
+
+These networking concepts are fundamental to AWS Solutions Architect, DevOps Engineer, Cloud Engineer, Platform Engineer, and Site Reliability Engineer interviews and are frequently tested in production networking discussions.
+
+---
+
+# Interview Questions – Phase 3.6: Route Tables & Route Table Associations
+
+## Overview
+
+These interview questions cover the concepts learned while creating **Route Tables, Routes, and Route Table Associations** in the VPC module.
+
+The answers focus on **AWS networking fundamentals**, **traffic routing**, **public vs private subnet design**, and **enterprise networking best practices**.
+
+---
+
+# 1. What is a Route Table?
+
+## Answer
+
+A **Route Table** is a set of rules that tells AWS where network traffic should be sent.
+
+Every subnet in a VPC is associated with a Route Table.
+
+When a resource sends traffic, AWS checks the Route Table to determine the next destination.
+
+Think of it as **Google Maps for your network**.
+
+Example:
+
+| Destination   | Target           |
+| ------------- | ---------------- |
+| `10.0.0.0/16` | Local VPC        |
+| `0.0.0.0/0`   | Internet Gateway |
+
+Without a Route Table, AWS doesn't know how to forward packets.
+
+### Interview Tip
+
+> "A Route Table contains routing rules that determine where traffic leaving a subnet should be sent."
+
+---
+
+# 2. What is a Route?
+
+## Answer
+
+A **Route** is an individual entry inside a Route Table.
+
+Each route consists of:
+
+* **Destination**
+* **Target**
+
+Example:
+
+| Destination   | Target           |
+| ------------- | ---------------- |
+| `10.0.0.0/16` | Local            |
+| `0.0.0.0/0`   | Internet Gateway |
+
+When traffic matches a destination, AWS forwards it to the specified target.
+
+Common route targets include:
+
+* Internet Gateway
+* NAT Gateway
+* Virtual Private Gateway
+* Transit Gateway
+* VPC Peering Connection
+* Local VPC
+
+### Interview Tip
+
+> "A Route is a single rule inside a Route Table that tells AWS where traffic for a specific destination should go."
+
+---
+
+# 3. Why do Public Subnets require `0.0.0.0/0`?
+
+## Answer
+
+The destination:
+
+```text
+0.0.0.0/0
+```
+
+represents **all IPv4 addresses**.
+
+It is known as the **default route**.
+
+When traffic is destined for any address outside the VPC, AWS uses this route.
+
+Example:
+
+```text id="0ebc8o"
+Destination:
+
+0.0.0.0/0
+
+↓
+
+Target:
+
+Internet Gateway
+```
+
+Traffic flow:
+
+```text id="twcxuq"
+EC2
+
+↓
+
+Public Route Table
+
+↓
+
+Internet Gateway
+
+↓
+
+Internet
+```
+
+Without this route, resources inside the Public Subnet cannot communicate with the Internet.
+
+### Interview Tip
+
+> "`0.0.0.0/0` is the default route that sends all non-local traffic to the Internet Gateway."
+
+---
+
+# 4. Why don't Private Subnets have an Internet route?
+
+## Answer
+
+Private Subnets are designed to host internal resources such as:
+
+* Application Servers
+* Amazon RDS
+* Internal Services
+
+These resources should not be directly accessible from the Internet.
+
+Instead:
+
+* Inbound traffic reaches the Application Load Balancer.
+* The ALB forwards requests to private EC2 instances.
+* Outbound Internet access (when required) is provided through a **NAT Gateway**, not an Internet Gateway.
+
+Example:
+
+```text id="kr4b3u"
+Internet
+
+↓
+
+Application Load Balancer
+
+↓
+
+Private EC2
+
+↓
+
+Amazon RDS
+```
+
+This architecture improves:
+
+* Security
+* Compliance
+* Network isolation
+* Protection against direct attacks
+
+### Interview Tip
+
+> "Private Subnets intentionally do not have a default Internet route because application servers and databases should remain isolated from direct Internet access."
+
+---
+
+# 5. What is a Route Table Association?
+
+## Answer
+
+A **Route Table Association** connects a subnet to a Route Table.
+
+Without this association, AWS does not know which routing rules apply to that subnet.
+
+Example:
+
+```text id="xh6b6g"
+Subnet
+
+↓
+
+Route Table Association
+
+↓
+
+Route Table
+
+↓
+
+Routes
+```
+
+Each subnet uses the routes defined in its associated Route Table.
+
+Terraform example:
+
+```hcl id="7j5jzk"
+resource "aws_route_table_association" "public" {
+
+  subnet_id      = aws_subnet.public[0].id
+
+  route_table_id = aws_route_table.public.id
+
+}
+```
+
+### Interview Tip
+
+> "A Route Table Association links a subnet to a Route Table so AWS knows which routing rules to apply."
+
+---
+
+# 6. Can multiple subnets share one Route Table?
+
+## Answer
+
+**Yes.**
+
+Multiple subnets can be associated with the same Route Table if they require identical routing behavior.
+
+Example:
+
+```text id="cl9ek4"
+Public Route Table
+
+│
+
+├── Public Subnet A
+
+└── Public Subnet B
+```
+
+This is a common enterprise design because both Public Subnets require:
+
+```text
+0.0.0.0/0
+
+↓
+
+Internet Gateway
+```
+
+Benefits include:
+
+* Simpler management
+* Consistent routing
+* Reduced duplication
+* Easier maintenance
+
+### Interview Tip
+
+> "Yes. Multiple subnets can share the same Route Table when they require the same routing configuration."
+
+---
+
+# 7. Can one subnet be associated with multiple Route Tables?
+
+## Answer
+
+**No.**
+
+A subnet can be associated with **only one Route Table at a time**.
+
+AWS enforces this limitation to avoid routing conflicts.
+
+Example:
+
+```text id="n4r5pa"
+Subnet
+
+↓
+
+One Route Table
+```
+
+If different routing behavior is required, create a new Route Table and update the subnet association.
+
+### Interview Tip
+
+> "A subnet can use only one Route Table at a time, ensuring that routing decisions remain deterministic."
+
+---
+
+# Quick Revision
+
+| Question                                          | Key Point                                                                        |
+| ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| What is a Route Table?                            | A collection of routing rules for network traffic.                               |
+| What is a Route?                                  | A single routing rule consisting of a destination and target.                    |
+| Why do Public Subnets require `0.0.0.0/0`?        | To send Internet-bound traffic to the Internet Gateway.                          |
+| Why don't Private Subnets have an Internet route? | To keep application and database resources isolated from direct Internet access. |
+| What is a Route Table Association?                | It links a subnet to a Route Table.                                              |
+| Can multiple subnets share one Route Table?       | Yes, if they require the same routing behavior.                                  |
+| Can one subnet use multiple Route Tables?         | No, a subnet can be associated with only one Route Table at a time.              |
+
+---
+
+# Interview Tips
+
+* Explain the relationship between **Subnets**, **Route Tables**, **Routes**, and **Internet Gateways**.
+* Remember that a Route Table controls traffic **leaving** a subnet.
+* Emphasize that Public Subnets require both a Route Table entry to the Internet Gateway and public IP addresses.
+* Mention that Private Subnets use a **NAT Gateway** for outbound Internet access rather than a direct Internet route.
+* Use simple network flow diagrams to explain routing decisions.
+
+---
+
+# Summary
+
+After completing this step, you should be able to confidently explain:
+
+* What a Route Table is.
+* What a Route is and how AWS evaluates it.
+* Why Public Subnets require a default route (`0.0.0.0/0`).
+* Why Private Subnets intentionally do not have direct Internet routes.
+* The purpose of Route Table Associations.
+* Why multiple subnets can share one Route Table.
+* Why a subnet can be associated with only one Route Table at a time.
+
+These networking concepts are fundamental for AWS Solutions Architect, DevOps Engineer, Cloud Engineer, Platform Engineer, and Site Reliability Engineer interviews and are frequently discussed when designing production AWS networks.
+
+---
