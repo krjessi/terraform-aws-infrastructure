@@ -3,13 +3,11 @@
 #############################################
 
 variable "project_name" {
-  description = "Project name."
-  type        = string
+  type = string
 }
 
 variable "environment" {
-  description = "Deployment environment."
-  type        = string
+  type = string
 }
 
 #############################################
@@ -17,13 +15,11 @@ variable "environment" {
 #############################################
 
 variable "vpc_id" {
-  description = "VPC ID."
-  type        = string
+  type = string
 }
 
 variable "public_subnet_ids" {
-  description = "Public subnet IDs."
-  type        = list(string)
+  type = list(string)
 }
 
 #############################################
@@ -31,8 +27,7 @@ variable "public_subnet_ids" {
 #############################################
 
 variable "alb_security_group_id" {
-  description = "ALB Security Group."
-  type        = string
+  type = string
 }
 
 #############################################
@@ -40,6 +35,5 @@ variable "alb_security_group_id" {
 #############################################
 
 variable "common_tags" {
-  description = "Common tags."
-  type        = map(string)
+  type = map(string)
 }

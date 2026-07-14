@@ -4,7 +4,7 @@
 
 resource "aws_lb" "main" {
 
-  name = "${var.project_name}-${var.environment}-alb"
+  name = "${local.name_prefix}-alb"
 
   internal = false
 
@@ -18,10 +18,13 @@ resource "aws_lb" "main" {
 
   enable_deletion_protection = false
 
+  idle_timeout = 60
+
   tags = merge(
     var.common_tags,
     {
-      Name = "${var.project_name}-${var.environment}-alb"
+      Name = "${local.name_prefix}-alb"
     }
   )
+
 }
