@@ -52,3 +52,18 @@ module "security" {
 
   common_tags = local.common_tags
 }
+
+#############################################
+# IAM Module
+#############################################
+
+module "iam" {
+
+  source = "./modules/iam"
+
+  project_name = var.project_name
+
+  environment = var.environment
+
+  common_tags = local.common_tags
+}

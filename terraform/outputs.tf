@@ -65,3 +65,15 @@ output "rds_security_group_id" {
   description = "RDS Security Group ID."
   value       = module.security.rds_security_group_id
 }
+
+output "ec2_role_name" {
+  value = module.iam.role_name
+}
+
+output "instance_profile_name" {
+  value = module.iam.instance_profile_name
+}
+
+output "instance_profile_arn" {
+  value = module.iam.instance_profile_arn
+}
