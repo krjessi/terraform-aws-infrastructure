@@ -67,3 +67,43 @@ module "iam" {
 
   common_tags = local.common_tags
 }
+
+#############################################
+# Launch Template Module
+#############################################
+
+module "launch_template" {
+
+  source = "./modules/launch-template"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  ec2_security_group_id = module.security.ec2_security_group_id
+
+  instance_profile_name = module.iam.instance_profile_name
+
+  common_tags = local.common_tags
+}
+
+#############################################
+# Auto Scaling Module
+#############################################
+
+module "autoscaling" {
+
+  source = "./modules/autoscaling"
+
+  project_name = var.project_name
+
+  environment = var.environment
+
+  launch_template_id = module.launch_template.launch_template_id
+
+  launch_template_version = module.launch_template.launch_template_latest_version
+
+  private_subnet_ids = module.vpc.private_app_subnet_ids
+
+  common_tags = local.common_tags
+
+}

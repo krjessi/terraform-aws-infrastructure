@@ -77,3 +77,27 @@ output "instance_profile_name" {
 output "instance_profile_arn" {
   value = module.iam.instance_profile_arn
 }
+
+#############################################
+# Launch Template
+#############################################
+
+output "launch_template_id" {
+  value = module.launch_template.launch_template_id
+}
+
+output "launch_template_latest_version" {
+  value = module.launch_template.launch_template_latest_version
+}
+
+#############################################
+# Auto Scaling Module
+#############################################
+
+output "autoscaling_group_name" {
+  value = module.autoscaling.autoscaling_group_name
+}
+
+output "autoscaling_group_arn" {
+  value = module.autoscaling.autoscaling_group_arn
+}
