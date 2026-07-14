@@ -12,17 +12,17 @@ resource "aws_autoscaling_group" "main" {
 
   max_size = var.max_size
 
-  vpc_zone_identifier = var.private_subnet_ids
-
   health_check_type = "EC2"
 
   health_check_grace_period = 300
+
+  vpc_zone_identifier = var.private_subnet_ids
 
   launch_template {
 
     id = var.launch_template_id
 
-    version = var.launch_template_version
+    version = var.launch_template_latest_version
 
   }
 

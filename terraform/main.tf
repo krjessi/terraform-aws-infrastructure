@@ -95,12 +95,10 @@ module "autoscaling" {
   source = "./modules/autoscaling"
 
   project_name = var.project_name
+  environment  = var.environment
 
-  environment = var.environment
-
-  launch_template_id = module.launch_template.launch_template_id
-
-  launch_template_version = module.launch_template.launch_template_latest_version
+  launch_template_id             = module.launch_template.launch_template_id
+  launch_template_latest_version = module.launch_template.launch_template_latest_version
 
   private_subnet_ids = module.vpc.private_app_subnet_ids
 

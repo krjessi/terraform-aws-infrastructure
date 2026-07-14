@@ -31,7 +31,7 @@ variable "private_subnet_ids" {
 }
 
 #############################################
-# Auto Scaling
+# Scaling
 #############################################
 
 variable "desired_capacity" {
