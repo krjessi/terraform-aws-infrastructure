@@ -6,18 +6,18 @@ resource "aws_autoscaling_group" "main" {
 
   name = "${local.name_prefix}-asg"
 
-  min_size = var.min_size
-  max_size = var.max_size
+  min_size         = var.min_size
+  max_size         = var.max_size
   desired_capacity = var.desired_capacity
 
-  health_check_type = "EC2"
+  health_check_type         = "EC2"
   health_check_grace_period = 300
 
   vpc_zone_identifier = var.private_subnet_ids
 
   launch_template {
-    id = var.launch_template_id
-    version = var.launch_template_latest_version
+    id      = var.launch_template_id
+    version = var.launch_template_version
   }
 
   capacity_rebalance = true
@@ -47,8 +47,8 @@ resource "aws_autoscaling_group" "main" {
     )
 
     content {
-      key = tag.key
-      value = tag.value
+      key                 = tag.key
+      value               = tag.value
       propagate_at_launch = true
     }
   }

@@ -8,6 +8,6 @@ output "launch_template_id" {
 }
 
 output "launch_template_latest_version" {
-  description = "Latest Launch Template Version"
+  description = "Launch Template Version"
   value       = aws_launch_template.main.latest_version
 }

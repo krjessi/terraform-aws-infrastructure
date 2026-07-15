@@ -87,3 +87,13 @@ variable "enable_security_module" {
   type        = bool
   default     = true
 }
+
+#############################################
+# Nat-Gateway
+#############################################
+
+variable "enable_nat_gateway" {
+  description = "Enable NAT Gateway"
+  type        = bool
+  default     = false
+}

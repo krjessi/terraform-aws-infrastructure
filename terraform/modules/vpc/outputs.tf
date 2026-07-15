@@ -79,3 +79,17 @@ output "private_db_route_table_id" {
   description = "Private Database Route Table ID."
   value       = aws_route_table.private_db.id
 }
+
+#############################################
+# NAT Gateway
+#############################################
+
+output "nat_gateway_id" {
+  description = "NAT Gateway ID"
+  value       = var.enable_nat_gateway ? aws_nat_gateway.main[0].id : null
+}
+
+output "nat_gateway_eip" {
+  description = "NAT Gateway Elastic IP"
+  value       = var.enable_nat_gateway ? aws_eip.nat[0].public_ip : null
+}
